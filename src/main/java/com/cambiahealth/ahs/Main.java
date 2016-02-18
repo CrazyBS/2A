@@ -11,7 +11,7 @@ public class Main {
 
     public static void main(String[] args) {
         Map<FileDescriptor, String> descriptors = new HashMap<FileDescriptor, String>();
-        descriptors.put(FileDescriptor.ACORS_FULL_EXTRACT, "");
+        descriptors.put(FileDescriptor.ACORS_ELIGIBILITY_EXTRACT, "");
         descriptors.put(FileDescriptor.CLAIMS_CONFIG_EXTRACT, "");
         descriptors.put(FileDescriptor.COB_EXTRACT, "");
         descriptors.put(FileDescriptor.CONFIDENTIAL_ADDRESS_EXTRACT, "");
