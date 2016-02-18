@@ -1,8 +1,20 @@
 package com.cambiahealth.ahs;
 
+import com.cambiahealth.ahs.file.FileDescriptor;
+import com.cambiahealth.ahs.file.FlatFileResolverFactory;
+import com.cambiahealth.ahs.file.IFlatFileResolver;
+
+import java.util.HashMap;
+import java.util.Map;
+
 public class Main {
 
     public static void main(String[] args) {
+        Map<FileDescriptor, String> descriptors = new HashMap<FileDescriptor, String>();
+        descriptors.put(FileDescriptor.ACORS_FULL_EXTRACT, "");
+
+        FlatFileResolverFactory factory = new FlatFileResolverFactory();
+        IFlatFileResolver resolver = factory.getInstance(descriptors);
         // Get next Ctg
         // Loop: Get next meme
 
