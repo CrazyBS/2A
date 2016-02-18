@@ -11,42 +11,6 @@ import java.util.*;
  */
 public class Timeline {
 
-    private class TimeVector {
-        private LocalDate start;
-        private LocalDate end;
-        private Object storedObject;
-
-        public TimeVector(LocalDate start, LocalDate end, Object storedObject) {
-            this.start = start;
-            this.end = end;
-            this.storedObject = storedObject;
-        }
-
-        public LocalDate getStart() {
-            return start;
-        }
-
-        public void setStart(LocalDate start) {
-            this.start = start;
-        }
-
-        public LocalDate getEnd() {
-            return end;
-        }
-
-        public void setEnd(LocalDate end) {
-            this.end = end;
-        }
-
-        public Object getStoredObject() {
-            return storedObject;
-        }
-
-        public void setStoredObject(Object storedObject) {
-            this.storedObject = storedObject;
-        }
-    }
-
     private LinkedList<TimeVector> timeline = new LinkedList<TimeVector>();
 
     public boolean isEmpty() {
@@ -138,5 +102,41 @@ public class Timeline {
 
     public boolean checkConsistency() {
         return true;
+    }
+
+    private class TimeVector {
+        private LocalDate start;
+        private LocalDate end;
+        private Object storedObject;
+
+        public TimeVector(LocalDate start, LocalDate end, Object storedObject) {
+            this.start = start;
+            this.end = end;
+            this.storedObject = storedObject;
+        }
+
+        public LocalDate getStart() {
+            return start;
+        }
+
+        public void setStart(LocalDate start) {
+            this.start = start;
+        }
+
+        public LocalDate getEnd() {
+            return end;
+        }
+
+        public void setEnd(LocalDate end) {
+            this.end = end;
+        }
+
+        public Object getStoredObject() {
+            return storedObject;
+        }
+
+        public void setStoredObject(Object storedObject) {
+            this.storedObject = storedObject;
+        }
     }
 }
