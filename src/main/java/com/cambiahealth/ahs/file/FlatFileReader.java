@@ -1,5 +1,7 @@
 package com.cambiahealth.ahs.file;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.HashMap;
@@ -32,8 +34,22 @@ public class FlatFileReader {
 
     public Map<String, String> readColumn() throws IOException {
         String line = readLine();
-        List<String> columns = descriptor.getSchema();
-        HashMap<String, String> rowData = new HashMap<String, String>(columns.size());
+        List<String> columnNames = descriptor.getSchema();
+        HashMap<String, String> rowData = new HashMap<String, String>(columnNames.size());
+
+        String[] columns = StringUtils.split(line, "|");
+        if(columnNames.size() != columns.length) {
+            throw new RuntimeException("The number of columns in the file: " +
+                    columns.length + " does not match the columns in the descriptor: " +
+                    columnNames.size() + " from the descriptor: " + descriptor.name());
+        }
+
+        for(int i =0;i<columns.length ;i++) {
+            String columnData = columns[i];
+            String columnName = columnNames.get(i);
+
+            rowData.put(columnName, columnData);
+        }
 
         return rowData;
     }

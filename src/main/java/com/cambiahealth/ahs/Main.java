@@ -12,6 +12,14 @@ public class Main {
     public static void main(String[] args) {
         Map<FileDescriptor, String> descriptors = new HashMap<FileDescriptor, String>();
         descriptors.put(FileDescriptor.ACORS_FULL_EXTRACT, "");
+        descriptors.put(FileDescriptor.CLAIMS_CONFIG_EXTRACT, "");
+        descriptors.put(FileDescriptor.COB_EXTRACT, "");
+        descriptors.put(FileDescriptor.CONFIDENTIAL_ADDRESS_EXTRACT, "");
+        descriptors.put(FileDescriptor.CONFIDENTIAL_EMAIL_PHONE_EXTRACT, "");
+        descriptors.put(FileDescriptor.CSPI_EXTRACT, "");
+        descriptors.put(FileDescriptor.MEMBER_HISTORY_EXTRACT, "");
+        descriptors.put(FileDescriptor.SUBSCRIBER_ADDRESS_EXTRACT, "");
+        descriptors.put(FileDescriptor.ZIP_CODE_EXTRACT, "");
 
         FlatFileResolverFactory factory = new FlatFileResolverFactory();
         IFlatFileResolver resolver = factory.getInstance(descriptors);
