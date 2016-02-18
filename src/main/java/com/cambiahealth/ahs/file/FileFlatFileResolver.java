@@ -13,8 +13,8 @@ public class FileFlatFileResolver implements IFlatFileResolver {
         this.descriptors = descriptors;
     }
 
-    public BufferedReader getFile(FileDescriptor descriptor) throws FileNotFoundException {
-        return new BufferedReader(new FileReader(descriptors.get(descriptor)));
+    public FlatFileReader getFile(FileDescriptor descriptor) throws FileNotFoundException {
+        return new FlatFileReader(new BufferedReader(new FileReader(descriptors.get(descriptor))), descriptor);
     }
 
     public Map<FileDescriptor, String> getDescriptors() {
