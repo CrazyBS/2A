@@ -23,19 +23,13 @@ public class AddressProcessor {
     private static FlatFileReader confReader;
     private static FlatFileReader subReader;
     private static FlatFileReader zipReader;
+    private static Set<String> zipCodes;
 
-    public static void initialize(IFlatFileResolver resolver) throws FileNotFoundException {
+    public static void initialize(IFlatFileResolver resolver) throws IOException {
         confReader = resolver.getFile(FileDescriptor.CONFIDENTIAL_ADDRESS_EXTRACT);
         subReader = resolver.getFile(FileDescriptor.SUBSCRIBER_ADDRESS_EXTRACT);
         zipReader = resolver.getFile(FileDescriptor.ZIP_CODE_EXTRACT);
-    }
-
-    public static void processAddress(String MEME, Map<TimelineContext, Timeline> timelines) throws IOException {
-        Timeline confTimeline = new Timeline();
-        Timeline subTimeline = new Timeline();
-        Timeline primaryTimeline = new Timeline();
-        Timeline secondaryTimeline = new Timeline();
-        Set<String> zipCodes = new HashSet<String>();
+        zipCodes = new HashSet<String>();
 
         while(true){
             Map<String, String> line;
@@ -47,6 +41,18 @@ public class AddressProcessor {
             }
         }
 
+        zipReader.close();
+        zipReader = null;
+    }
+
+    public static void processAddress(String MEME, Map<TimelineContext, Timeline> timelines) throws IOException {
+        Timeline confTimeline = new Timeline();
+        Timeline subTimeline = new Timeline();
+        Timeline rejectTimeline = new Timeline();
+        Timeline rejectSubTimeline = new Timeline();
+        Timeline primaryTimeline = new Timeline();
+        Timeline secondaryTimeline = new Timeline();
+
         while(true) {
             Map<String, String> line;
             line = confReader.readColumn();
@@ -57,9 +63,9 @@ public class AddressProcessor {
                     continue;
                 } else if(rowTest == 0) {
                     if(zipCodes.contains(line.get(ConfidentialAddress.ENAD_ZIP))){
-                        confTimeline.storeVector(new LocalDate(line.get(ConfidentialAddress.PMCC_EFF_DT)), new LocalDate(line.get(ConfidentialAddress.PMCC_TERM_DTM)), line);
+                        rejectTimeline.storeVector(new LocalDate(line.get(ConfidentialAddress.PMCC_EFF_DT)), new LocalDate(line.get(ConfidentialAddress.PMCC_TERM_DTM)), line);
                     } else {
-                        confTimeline.storeVector(new LocalDate(line.get(ConfidentialAddress.PMCC_EFF_DT)), new LocalDate(line.get(ConfidentialAddress.PMCC_TERM_DTM)), null);
+                        confTimeline.storeVector(new LocalDate(line.get(ConfidentialAddress.PMCC_EFF_DT)), new LocalDate(line.get(ConfidentialAddress.PMCC_TERM_DTM)), line);
                     }
                 } else {
                     confReader.unRead();
@@ -68,13 +74,6 @@ public class AddressProcessor {
             } else {
                 break;
             }
-            //Timeline.RemoveAll(Timeline)
-            //Timeline.PutAll(Timeline)
-            //Basic merge methods.  Likely unused outside of this scenario, but very useful.
-            //RemoveAll will
-
-            timelines.put(TimelineContext.ADDRESS_PRIMARY,primaryTimeline);
-            timelines.put(TimelineContext.ADDRESS_SECONDARY,secondaryTimeline);
         }
 
         while(true) {
@@ -87,6 +86,9 @@ public class AddressProcessor {
                     continue;
                 } else if(rowTest == 0) {
                     subTimeline.storeVector(new LocalDate(line.get(SubscriberAddress.SBSB_EFF_DT)), new LocalDate(line.get(SubscriberAddress.SBSB_TERM_DT)), line);
+                    if (zipCodes.contains(line.get(SubscriberAddress.SBAD_ZIP))){
+                        rejectSubTimeline.storeVector(new LocalDate(line.get(SubscriberAddress.SBSB_EFF_DT)), new LocalDate(line.get(SubscriberAddress.SBSB_TERM_DT)), line);
+                    }
                 } else {
                     subReader.unRead();
                     break;
@@ -95,6 +97,19 @@ public class AddressProcessor {
                 break;
             }
         }
+
+        subTimeline.removeAll(rejectTimeline);
+
+        primaryTimeline.addAll(subTimeline);
+        primaryTimeline.removeAll(rejectSubTimeline);
+        primaryTimeline.addAll(confTimeline);
+
+        secondaryTimeline.addAll(subTimeline);
+        subTimeline.removeAll(confTimeline);
+        secondaryTimeline.removeAll(subTimeline);
+
+        timelines.put(TimelineContext.ADDRESS_PRIMARY, primaryTimeline);
+        timelines.put(TimelineContext.ADDRESS_SECONDARY, secondaryTimeline);
     }
 
     public static void shutdown() throws IOException {
@@ -103,5 +118,7 @@ public class AddressProcessor {
 
         subReader.close();
         subReader = null;
+
+        zipCodes = null;
     }
 }

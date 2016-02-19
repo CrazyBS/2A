@@ -114,6 +114,12 @@ public class Timeline {
         }
     }
 
+    public void removeAll(Timeline timeline) {
+        for(TimeVector vector : timeline.timeline) {
+            this.storeVector(vector.getStart(), vector.getEnd(), null);
+        }
+    }
+
     private class TimeVector {
         private LocalDate start;
         private LocalDate end;

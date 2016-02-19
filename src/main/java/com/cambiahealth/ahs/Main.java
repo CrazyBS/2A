@@ -5,6 +5,7 @@ import com.cambiahealth.ahs.file.FileDescriptor;
 import com.cambiahealth.ahs.file.FlatFileReader;
 import com.cambiahealth.ahs.file.FlatFileResolverFactory;
 import com.cambiahealth.ahs.file.IFlatFileResolver;
+import com.cambiahealth.ahs.processors.AddressProcessor;
 import com.cambiahealth.ahs.processors.CobProcessor;
 import com.cambiahealth.ahs.processors.NameProcessor;
 import com.cambiahealth.ahs.timeline.Timeline;
@@ -79,11 +80,12 @@ public class Main {
         shutdownProcessors();
     }
 
-    private static void initializeProcessors(IFlatFileResolver resolver) throws FileNotFoundException {
+    private static void initializeProcessors(IFlatFileResolver resolver) throws IOException {
         // COB init()
         CobProcessor.initialize(resolver);
 
         // Address init()
+        AddressProcessor.initialize(resolver);
 
         // NameProcessor init()
         NameProcessor.initialize(resolver);
@@ -96,6 +98,7 @@ public class Main {
         CobProcessor.shutdown();
 
         // Address shutdown()
+        AddressProcessor.shutdown();
 
         // NameProcessor shutdown()
         NameProcessor.shutdown();
@@ -150,6 +153,7 @@ public class Main {
         CobProcessor.processCob(meme, timelines);
 
         // Address process()
+        AddressProcessor.processAddress(meme, timelines);
 
         // NameProcessor process()
         NameProcessor.processName(meme, timelines);
