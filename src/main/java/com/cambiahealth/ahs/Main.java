@@ -6,6 +6,7 @@ import com.cambiahealth.ahs.file.FlatFileReader;
 import com.cambiahealth.ahs.file.FlatFileResolverFactory;
 import com.cambiahealth.ahs.file.IFlatFileResolver;
 import com.cambiahealth.ahs.processors.CobProcessor;
+import com.cambiahealth.ahs.processors.NameProcessor;
 import com.cambiahealth.ahs.timeline.Timeline;
 import com.cambiahealth.ahs.timeline.TimelineContext;
 import org.apache.commons.lang3.StringUtils;
@@ -77,7 +78,8 @@ public class Main {
 
         // Address init()
 
-        // Name init()
+        // NameProcessor init()
+        NameProcessor.initialize(resolver);
 
         // Eligibility init()
     }
@@ -88,7 +90,8 @@ public class Main {
 
         // Address shutdown()
 
-        // Name shutdown()
+        // NameProcessor shutdown()
+        NameProcessor.shutdown();
 
         // Eligibility shutdown()
     }
@@ -141,7 +144,8 @@ public class Main {
 
         // Address process()
 
-        // Name process()
+        // NameProcessor process()
+        NameProcessor.processName(meme, timelines);
 
         // Eligibility process()
     }
