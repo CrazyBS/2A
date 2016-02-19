@@ -55,10 +55,12 @@ public class Timeline {
                     continue;
                 }
 
-                // At this point, we know fell through this this level.  So we are likely at
+                // At this point, we know fell through this level.  So we are likely at
                 // our insertion point.
                 if(null != data) {
+                    iter.previous();
                     iter.add(newVector);
+                    iter.next();
                 }
 
                 // Delete any vector that is contained within our new one
