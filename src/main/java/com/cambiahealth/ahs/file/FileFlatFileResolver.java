@@ -17,6 +17,10 @@ public class FileFlatFileResolver implements IFlatFileResolver {
         return new FlatFileReader(new BufferedReader(new FileReader(descriptors.get(descriptor))), descriptor);
     }
 
+    public BufferedWriter writeFile(FileDescriptor descriptor) throws IOException {
+        return new BufferedWriter(new FileWriter(descriptors.get(descriptor)));
+    }
+
     public Map<FileDescriptor, String> getDescriptors() {
         return descriptors;
     }

@@ -24,7 +24,8 @@ public enum FileDescriptor {
     CONFIDENTIAL_ADDRESS_EXTRACT(newArrayList("")),
     SUBSCRIBER_ADDRESS_EXTRACT(newArrayList("")),
     CONFIDENTIAL_EMAIL_PHONE_EXTRACT(newArrayList("")),
-    CSPI_EXTRACT(newArrayList(""));
+    CSPI_EXTRACT(newArrayList("")),
+    FINAL_2A_OUTPUT(newArrayList(""));
 
     private List<String> schema;
 

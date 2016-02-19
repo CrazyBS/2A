@@ -5,15 +5,15 @@ import com.cambiahealth.ahs.file.FileDescriptor;
 import com.cambiahealth.ahs.file.FlatFileReader;
 import com.cambiahealth.ahs.file.FlatFileResolverFactory;
 import com.cambiahealth.ahs.file.IFlatFileResolver;
+import com.cambiahealth.ahs.processors.CobProcessor;
 import com.cambiahealth.ahs.timeline.Timeline;
+import com.cambiahealth.ahs.timeline.TimelineContext;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Main {
 
@@ -28,6 +28,7 @@ public class Main {
         descriptors.put(FileDescriptor.MEMBER_HISTORY_EXTRACT, "");
         descriptors.put(FileDescriptor.SUBSCRIBER_ADDRESS_EXTRACT, "");
         descriptors.put(FileDescriptor.ZIP_CODE_EXTRACT, "");
+        descriptors.put(FileDescriptor.FINAL_2A_OUTPUT, "");
 
         FlatFileResolverFactory factory = new FlatFileResolverFactory(false);
         IFlatFileResolver resolver = factory.getInstance(descriptors);
@@ -66,10 +67,13 @@ public class Main {
         initializeProcessors(resolver);
 
         beginProcessing(resolver);
+
+        shutdownProcessors();
     }
 
-    private static void initializeProcessors(IFlatFileResolver resolver) {
+    private static void initializeProcessors(IFlatFileResolver resolver) throws FileNotFoundException {
         // COB init()
+        CobProcessor.initialize(resolver);
 
         // Address init()
 
@@ -78,29 +82,91 @@ public class Main {
         // Eligibility init()
     }
 
+    private static void shutdownProcessors() throws IOException {
+        // COB shutdown()
+        CobProcessor.shutdown();
+
+        // Address shutdown()
+
+        // Name shutdown()
+
+        // Eligibility shutdown()
+    }
+
     private static void beginProcessing(IFlatFileResolver resolver) throws IOException {
         FlatFileReader reader = resolver.getFile(FileDescriptor.ACORS_ELIGIBILITY_EXTRACT);
-        Map<String, String> currentLine = reader.readColumn();
+        BufferedWriter writer = resolver.writeFile(FileDescriptor.FINAL_2A_OUTPUT);
 
         String ctgId = null;
         String memeCk = null;
+        Map<String, String> currentLine = null;
 
-        List<List<Timeline>> rawRows = new ArrayList<List<Timeline>>();
-        List<Timeline> timelines = new ArrayList<Timeline>();
+        Deque<Map<TimelineContext, Timeline>> rawRows = new ArrayDeque<Map<TimelineContext, Timeline>>();
+        Map<TimelineContext, Timeline> timelines = new HashMap<TimelineContext, Timeline>();
 
         // Walk through AcorsEligibility
-        while(null != currentLine) {
+        while(null != (currentLine = reader.readColumn())) {
             String lineCtgId = currentLine.get(AcorsEligibility.CTG_ID.toString());
             String lineMemeCk = currentLine.get(AcorsEligibility.MEME_CK.toString());
 
+            // If MEME has changed, then process new row
+            // If meme has not changed move on
+            if(StringUtils.equals(lineMemeCk, memeCk)) {
+               continue;
+            }
 
+            // If CTG has changed, process COB
+            // then output row
+            if(!StringUtils.equals(lineCtgId, ctgId)) {
+                ouputAllRows(writer, rawRows);
+                rawRows.clear();
+            }
+
+            // Start the next row
+            ctgId = lineCtgId;
+            memeCk = lineMemeCk;
+
+            processMeme(lineMemeCk, timelines);
+            rawRows.addLast(timelines);
         }
 
+        // Output the rest of the rows
+        ouputAllRows(writer, rawRows);
+        rawRows.clear();
+    }
 
+    private static void processMeme(String meme, Map<TimelineContext, Timeline>  timelines) {
+        // COB process()
+        CobProcessor.processCob(meme, timelines);
+
+        // Address process()
+
+        // Name process()
+
+        // Eligibility process()
+    }
+
+    private static void processCob(List<Timeline> cobLines) {
 
     }
 
-    private static void outputRowTo2A(BufferedWriter writer) {
+    private static void ouputAllRows(BufferedWriter writer, Deque<Map<TimelineContext, Timeline>> rawRows) {
+        // Process the COB accross CTG if needed
+        if(rawRows.size() > 1) {
+            List<Timeline> cobLines = new ArrayList<Timeline>();
+            for(Map<TimelineContext, Timeline> lines : rawRows) {
+                cobLines.add(lines.get(TimelineContext.COB));
+            }
+            processCob(cobLines);
+        }
+
+        // Out all the rows
+        while(!rawRows.isEmpty()) {
+            outputRowTo2A(writer, rawRows.removeFirst());
+        }
+    }
+
+    private static void outputRowTo2A(BufferedWriter writer, Map<TimelineContext, Timeline> timelines) {
 
     }
 }

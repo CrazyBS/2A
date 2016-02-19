@@ -60,4 +60,8 @@ public class FlatFileReader {
     public void unRead() {
         useBuf = true;
     }
+
+    public void close() throws IOException {
+        reader.close();
+    }
 }
