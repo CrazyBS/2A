@@ -17,7 +17,7 @@ public class Timeline {
         return timeline.isEmpty();
     }
 
-    public int storeVector(LocalDate start, Date end, LocalDate data) {
+    public int storeVector(LocalDate start, LocalDate end, Object data) {
         LocalDate startTime = new LocalDate(start);
         LocalDate endTime = new LocalDate(end);
 

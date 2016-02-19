@@ -85,6 +85,7 @@ public class Main {
         String ctgId = null;
         String memeCk = null;
 
+        List<List<Timeline>> rawRows = new ArrayList<List<Timeline>>();
         List<Timeline> timelines = new ArrayList<Timeline>();
 
         // Walk through AcorsEligibility
@@ -100,6 +101,6 @@ public class Main {
     }
 
     private static void outputRowTo2A(BufferedWriter writer) {
-        
+
     }
 }
