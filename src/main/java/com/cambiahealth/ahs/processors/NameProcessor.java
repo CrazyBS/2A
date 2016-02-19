@@ -41,6 +41,8 @@ public class NameProcessor {
                         reader.unRead();
                         timeline.storeVector(storedStart, storedEnd, storedLine);
                         break;
+                    } else if(line.get(MemberHistory.MEME_CK).compareTo(MEME) > 0){
+                        break;
                     }
                 } else {
                     if(storedLine.isEmpty()) {
