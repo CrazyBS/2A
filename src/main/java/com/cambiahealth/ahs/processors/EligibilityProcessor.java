@@ -9,6 +9,9 @@ import com.cambiahealth.ahs.file.FlatFileReader;
 import com.cambiahealth.ahs.file.IFlatFileResolver;
 import com.cambiahealth.ahs.timeline.Timeline;
 import com.cambiahealth.ahs.timeline.TimelineContext;
+import org.joda.time.DateMidnight;
+import org.joda.time.DateTime;
+import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 
 import java.io.FileNotFoundException;
@@ -55,7 +58,26 @@ public class EligibilityProcessor {
             collectLines(cspiReader, meme, CspiHistory.MEME_CK.toString(), cspiLines);
 
             // Okay, now we have all of our data, let's try joining them together
+            for(Map<String, String> acorsLine : acorsLines) {
+                AcorsToCspiKey key = new AcorsToCspiKey(true, acorsLine);
 
+                for(Map<String, String> cspiLine: cspiLines) {
+                    AcorsToCspiKey cspiKey = new AcorsToCspiKey(false, cspiLine);
+
+                    if(key.equals(cspiKey)) {
+                        // We match, let's look for date match
+                        DateTime acorStart = new DateTime(format.parse(acorsLine.get(AcorsEligibility.MEME_EFFECTIVE_DATE.toString())));
+                        DateTime cspiStart = new DateTime(format.parse(cspiLine.get(CspiHistory.CSPI_EFF_DT.toString())));
+                        DateTime cspiEnd = new DateTime(format.parse(cspiLine.get(CspiHistory.CSPI_TERM_DT.toString())));
+
+                        if(new Interval(cspiStart, cspiEnd).contains(acorStart)) {
+                            // We have a complete match!
+                            // Collect the rest of the data
+
+                        }
+                    }
+                }
+            }
         }
 
         // If this returns an empty timeline, we can cancel the rest of the processing on this row
@@ -90,7 +112,7 @@ public class EligibilityProcessor {
         return !collection.isEmpty();
     }
 
-    private class AcorsToCspiKey {
+    private static class AcorsToCspiKey {
         private String meme;
         private String cspi;
         private String cscs;
@@ -99,6 +121,18 @@ public class EligibilityProcessor {
             this.meme = meme;
             this.cspi = cspi;
             this.cscs = cscs;
+        }
+
+        public AcorsToCspiKey(boolean isAcors, Map<String, String> map) {
+            if(isAcors) {
+                this.meme = map.get(AcorsEligibility.MEME_CK.toString());
+                this.cspi = map.get(AcorsEligibility.CSPI_ID.toString());
+                this.cscs = map.get(AcorsEligibility.CSCS_ID.toString());
+            } else {
+                this.meme = map.get(CspiHistory.MEME_CK.toString());
+                this.cspi = map.get(CspiHistory.CSPI_ID.toString());
+                this.cscs = map.get(CspiHistory.CSCS_ID.toString());
+            }
         }
 
         @Override

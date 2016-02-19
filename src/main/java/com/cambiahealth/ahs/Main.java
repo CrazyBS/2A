@@ -86,6 +86,7 @@ public class Main {
         CobProcessor.initialize(resolver);
 
         // Address init()
+        AddressProcessor.initialize(resolver);
 
         // NameProcessor init()
         NameProcessor.initialize(resolver);
@@ -99,6 +100,7 @@ public class Main {
         CobProcessor.shutdown();
 
         // Address shutdown()
+        AddressProcessor.shutdown();
 
         // NameProcessor shutdown()
         NameProcessor.shutdown();
