@@ -13,6 +13,7 @@ import com.cambiahealth.ahs.timeline.Timeline;
 import com.cambiahealth.ahs.timeline.TimelineContext;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.Days;
 import org.joda.time.LocalDate;
 import org.joda.time.ReadablePeriod;
 import org.joda.time.Years;
@@ -207,6 +208,58 @@ public class Main {
     }
 
     private static void outputRowTo2A(BufferedWriter writer, Map<TimelineContext, Timeline> timelines) {
+        Timeline cob = timelines.get(TimelineContext.COB);
+        Timeline name = timelines.get(TimelineContext.NAME);
+        Timeline primaryAddress = timelines.get(TimelineContext.ADDRESS_PRIMARY);
+        Timeline secondaryAddress = timelines.get(TimelineContext.ADDRESS_SECONDARY);
+        Timeline eligibility = timelines.get(TimelineContext.ELIGIBILITY);
 
+        Timeline cane = new Timeline();
+        HashMap<String, String> curDay = new HashMap<String, String>();
+        HashMap<String, String> nextDay = new HashMap<String, String>();
+        Map<String,String> testMap;
+        LocalDate today = new LocalDate();
+        today = today.minusDays(today.getDayOfMonth());
+        LocalDate twoYear = today.minusYears(2);
+        LocalDate threeYear = today.minusYears(3);
+        LocalDate date = today;
+        LocalDate tmpEnd = date;
+
+        while(date.compareTo(threeYear)>0){
+
+
+            curDay.putAll(cob.get(date));
+            testMap = name.get(date);
+            if(!testMap.isEmpty()) {
+                curDay.putAll(testMap);
+            }else{
+                date = date.minusDays(1);
+                continue;
+            }
+            testMap = primaryAddress.get(date);
+            if(!testMap.isEmpty()) {
+                curDay.putAll(testMap);
+            }else{
+                date = date.minusDays(1);
+                continue;
+            }
+            curDay.putAll(secondaryAddress.get(date));
+            curDay.putAll(eligibility.get(date));
+
+            if(date.equals(today)){
+                nextDay = curDay;
+                date = date.minusDays(1);
+                continue;
+            }
+            if(!nextDay.equals(curDay)){
+                if(tmpEnd.compareTo(twoYear)>0){
+                    cane.storeVector(date.plusDays(1),tmpEnd,nextDay);
+                }
+                tmpEnd = date;
+            }
+
+            nextDay = curDay;
+
+        }
     }
 }
