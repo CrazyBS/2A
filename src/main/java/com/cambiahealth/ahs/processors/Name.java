@@ -1,4 +1,4 @@
-package com.cambiahealth.ahs.name;
+package com.cambiahealth.ahs.processors;
 
 import com.cambiahealth.ahs.file.FileDescriptor;
 import com.cambiahealth.ahs.file.FlatFileReader;
@@ -29,7 +29,7 @@ public class Name {
         }
     }
 
-    public static void processAddress(IFlatFileResolver resolver, String MEME, Timeline timeline)
+    public static void processName(IFlatFileResolver resolver, String MEME, Timeline timeline)
     {
         FlatFileReader reader;
         Map<String, String> storedLine = new HashMap<String, String>();
