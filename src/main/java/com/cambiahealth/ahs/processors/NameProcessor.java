@@ -14,7 +14,7 @@ import org.joda.time.LocalDate;
 /**
  * Created by msnook on 2/18/2016.
  */
-public class Name {
+public class NameProcessor {
     private enum NAMECOLUMNS {
         MEME_CK("MEME_CK"),
         START_DT("START_DT"),
