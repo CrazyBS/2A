@@ -1,9 +1,6 @@
 package com.cambiahealth.ahs.file;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.Map;
 
 /**
@@ -18,6 +15,11 @@ public class ResourceFlatFileResolver implements IFlatFileResolver {
 
     public FlatFileReader getFile(FileDescriptor descriptor) throws FileNotFoundException {
         return new FlatFileReader(new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream("/" + descriptors.get(descriptor)))), descriptor);
+    }
+
+    public BufferedWriter writeFile(FileDescriptor descriptor) throws IOException {
+        // TODO:  How do we handle this for test!!
+        return new BufferedWriter(new OutputStreamWriter(null));
     }
 
     public Map<FileDescriptor, String> getDescriptors() {
