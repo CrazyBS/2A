@@ -17,7 +17,7 @@ public class Timeline {
         return timeline.isEmpty();
     }
 
-    public int storeVector(Date start, Date end, Object data) {
+    public int storeVector(LocalDate start, Date end, LocalDate data) {
         LocalDate startTime = new LocalDate(start);
         LocalDate endTime = new LocalDate(end);
 
@@ -28,9 +28,9 @@ public class Timeline {
 
         TimeVector newVector = new TimeVector(startTime, endTime, data);
 
-        if(timeline.isEmpty()) {
+        if(timeline.isEmpty() && null != data) {
             timeline.add(newVector);
-        } else {
+        } else if (!timeline.isEmpty()){
             ListIterator<TimeVector> iter = timeline.listIterator();
             while(iter.hasNext()) {
                 TimeVector vector = iter.next();
@@ -57,7 +57,9 @@ public class Timeline {
 
                 // At this point, we know fell through this this level.  So we are likely at
                 // our insertion point.
-                iter.add(newVector);
+                if(null != data) {
+                    iter.add(newVector);
+                }
 
                 // Delete any vector that is contained within our new one
                 if((vector.getStart().isAfter(startTime) || vector.getStart().isEqual(startTime))

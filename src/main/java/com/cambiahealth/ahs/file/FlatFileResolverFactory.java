@@ -7,10 +7,19 @@ import java.util.Map;
  */
 public class FlatFileResolverFactory {
     private static IFlatFileResolver instance;
+    private static boolean isTest;
+
+    public FlatFileResolverFactory(boolean isTest) {
+        isTest = isTest;
+    }
 
     public IFlatFileResolver getInstance(Map<FileDescriptor, String> descriptors) {
         if(null == instance) {
-            instance = new FileFlatFileResolver(descriptors);
+            if(isTest) {
+                instance = new ResourceFlatFileResolver(descriptors);
+            } else {
+                instance = new FileFlatFileResolver(descriptors);
+            }
         }
         return instance;
     }

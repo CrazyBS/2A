@@ -1,15 +1,23 @@
 package com.cambiahealth.ahs;
 
+import com.cambiahealth.ahs.entity.AcorsEligibility;
 import com.cambiahealth.ahs.file.FileDescriptor;
+import com.cambiahealth.ahs.file.FlatFileReader;
 import com.cambiahealth.ahs.file.FlatFileResolverFactory;
 import com.cambiahealth.ahs.file.IFlatFileResolver;
+import com.cambiahealth.ahs.timeline.Timeline;
 
+import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         Map<FileDescriptor, String> descriptors = new HashMap<FileDescriptor, String>();
         descriptors.put(FileDescriptor.ACORS_ELIGIBILITY_EXTRACT, "");
         descriptors.put(FileDescriptor.CLAIMS_CONFIG_EXTRACT, "");
@@ -21,8 +29,11 @@ public class Main {
         descriptors.put(FileDescriptor.SUBSCRIBER_ADDRESS_EXTRACT, "");
         descriptors.put(FileDescriptor.ZIP_CODE_EXTRACT, "");
 
-        FlatFileResolverFactory factory = new FlatFileResolverFactory();
+        FlatFileResolverFactory factory = new FlatFileResolverFactory(false);
         IFlatFileResolver resolver = factory.getInstance(descriptors);
+
+        create2A(resolver);
+
         // Get next Ctg
         // Loop: Get next meme
 
@@ -49,5 +60,46 @@ public class Main {
 
         // Loop Ctg
         System.out.println("I'm a java JAR!");
+    }
+
+    private static void create2A(IFlatFileResolver resolver) throws IOException {
+        initializeProcessors(resolver);
+
+        beginProcessing(resolver);
+    }
+
+    private static void initializeProcessors(IFlatFileResolver resolver) {
+        // COB init()
+
+        // Address init()
+
+        // Name init()
+
+        // Eligibility init()
+    }
+
+    private static void beginProcessing(IFlatFileResolver resolver) throws IOException {
+        FlatFileReader reader = resolver.getFile(FileDescriptor.ACORS_ELIGIBILITY_EXTRACT);
+        Map<String, String> currentLine = reader.readColumn();
+
+        String ctgId = null;
+        String memeCk = null;
+
+        List<Timeline> timelines = new ArrayList<Timeline>();
+
+        // Walk through AcorsEligibility
+        while(null != currentLine) {
+            String lineCtgId = currentLine.get(AcorsEligibility.CTG_ID.toString());
+            String lineMemeCk = currentLine.get(AcorsEligibility.MEME_CK.toString());
+
+
+        }
+
+
+
+    }
+
+    private static void outputRowTo2A(BufferedWriter writer) {
+        
     }
 }

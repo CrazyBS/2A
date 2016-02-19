@@ -34,6 +34,9 @@ public class FlatFileReader {
 
     public Map<String, String> readColumn() throws IOException {
         String line = readLine();
+        if(null == line) {
+            return null;
+        }
         List<String> columnNames = descriptor.getSchema();
         HashMap<String, String> rowData = new HashMap<String, String>(columnNames.size());
 
