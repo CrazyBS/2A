@@ -1,4 +1,4 @@
-package com.cambiahealth.ahs.name;
+package com.cambiahealth.ahs.processors;
 
 import com.cambiahealth.ahs.file.FileDescriptor;
 import com.cambiahealth.ahs.file.FlatFileReader;
@@ -14,7 +14,7 @@ import org.joda.time.LocalDate;
 /**
  * Created by msnook on 2/18/2016.
  */
-public class Name {
+public class NameProcessor {
     private enum NAMECOLUMNS {
         MEME_CK("MEME_CK"),
         START_DT("START_DT"),
@@ -24,14 +24,19 @@ public class Name {
 
         public final String columnName;
 
-        private NAMECOLUMNS(String columnName){
+        private NAMECOLUMNS(String columnName) {
             this.columnName = columnName;
         }
     }
 
-    public static void processAddress(IFlatFileResolver resolver, String MEME, Timeline timeline)
+    private static FlatFileReader reader;
+
+    public static void initialize(IFlatFileResolver resolver) throws FileNotFoundException {
+        reader = resolver.getFile(FileDescriptor.COB_EXTRACT);
+    }
+
+    public static void processName(IFlatFileResolver resolver, String MEME, Timeline timeline)
     {
-        FlatFileReader reader;
         Map<String, String> storedLine = new HashMap<String, String>();
         LocalDate storedStart = new LocalDate();
         LocalDate storedEnd = new LocalDate();
@@ -77,5 +82,10 @@ public class Name {
                 }
             }
         }
+    }
+
+    public static void shutdown() throws IOException {
+        reader.close();
+        reader = null;
     }
 }
