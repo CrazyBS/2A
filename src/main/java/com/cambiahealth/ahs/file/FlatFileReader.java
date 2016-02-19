@@ -44,7 +44,8 @@ public class FlatFileReader {
         if(columnNames.size() != columns.length) {
             throw new RuntimeException("The number of columns in the file: " +
                     columns.length + " does not match the columns in the descriptor: " +
-                    columnNames.size() + " from the descriptor: " + descriptor.name());
+                    columnNames.size() + " from the descriptor: " + descriptor.name() +
+                    "\n" + line);
         }
 
         for(int i =0;i<columns.length ;i++) {

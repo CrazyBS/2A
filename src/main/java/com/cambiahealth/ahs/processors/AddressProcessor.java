@@ -45,7 +45,7 @@ public class AddressProcessor {
         zipReader = null;
     }
 
-    public static void processAddress(String MEME, Map<TimelineContext, Timeline> timelines) throws IOException {
+    public static Timeline processAddress(String MEME, Map<TimelineContext, Timeline> timelines) throws IOException {
         Timeline confTimeline = new Timeline();
         Timeline subTimeline = new Timeline();
         Timeline rejectTimeline = new Timeline();
@@ -110,6 +110,8 @@ public class AddressProcessor {
 
         timelines.put(TimelineContext.ADDRESS_PRIMARY, primaryTimeline);
         timelines.put(TimelineContext.ADDRESS_SECONDARY, secondaryTimeline);
+
+        return primaryTimeline;
     }
 
     public static void shutdown() throws IOException {
