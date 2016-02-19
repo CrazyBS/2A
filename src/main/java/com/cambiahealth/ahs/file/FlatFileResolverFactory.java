@@ -10,7 +10,7 @@ public class FlatFileResolverFactory {
     private static boolean isTest;
 
     public FlatFileResolverFactory(boolean isTest) {
-        isTest = isTest;
+        FlatFileResolverFactory.isTest = isTest;
     }
 
     public IFlatFileResolver getInstance(Map<FileDescriptor, String> descriptors) {

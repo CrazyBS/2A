@@ -4,7 +4,7 @@ package com.cambiahealth.ahs.entity;
  * Created by bpyl on 2/18/2016.
  */
 public enum SubscriberAddress {
-    SBSB_CK,
+    MEME_CK,
     SBAD_TYPE,
     SBSB_EFF_DT,
     SBSB_TERM_DT,

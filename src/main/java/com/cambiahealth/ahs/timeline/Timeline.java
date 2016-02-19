@@ -106,6 +106,12 @@ public class Timeline {
         return true;
     }
 
+    public void addAll(Timeline timeline) {
+        for(TimeVector vector : timeline.timeline) {
+            this.storeVector(vector.getStart(), vector.getEnd(), vector.getStoredObject());
+        }
+    }
+
     private class TimeVector {
         private LocalDate start;
         private LocalDate end;

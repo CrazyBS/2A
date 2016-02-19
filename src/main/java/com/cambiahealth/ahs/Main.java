@@ -8,16 +8,23 @@ import com.cambiahealth.ahs.file.IFlatFileResolver;
 import com.cambiahealth.ahs.processors.CobProcessor;
 import com.cambiahealth.ahs.timeline.Timeline;
 import com.cambiahealth.ahs.timeline.TimelineContext;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.joda.time.LocalDate;
+import org.joda.time.ReadablePeriod;
+import org.joda.time.Years;
 
 import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.*;
 
 public class Main {
 
-    public static void main(String[] args) throws IOException {
+    private static ReadablePeriod lookback = Years.THREE;
+
+    public static void main(String[] args) throws IOException, ParseException {
         Map<FileDescriptor, String> descriptors = new HashMap<FileDescriptor, String>();
         descriptors.put(FileDescriptor.ACORS_ELIGIBILITY_EXTRACT, "");
         descriptors.put(FileDescriptor.CLAIMS_CONFIG_EXTRACT, "");
@@ -63,7 +70,7 @@ public class Main {
         System.out.println("I'm a java JAR!");
     }
 
-    private static void create2A(IFlatFileResolver resolver) throws IOException {
+    private static void create2A(IFlatFileResolver resolver) throws IOException, ParseException {
         initializeProcessors(resolver);
 
         beginProcessing(resolver);
@@ -93,7 +100,7 @@ public class Main {
         // Eligibility shutdown()
     }
 
-    private static void beginProcessing(IFlatFileResolver resolver) throws IOException {
+    private static void beginProcessing(IFlatFileResolver resolver) throws IOException, ParseException {
         FlatFileReader reader = resolver.getFile(FileDescriptor.ACORS_ELIGIBILITY_EXTRACT);
         BufferedWriter writer = resolver.writeFile(FileDescriptor.FINAL_2A_OUTPUT);
 
@@ -135,7 +142,7 @@ public class Main {
         rawRows.clear();
     }
 
-    private static void processMeme(String meme, Map<TimelineContext, Timeline>  timelines) {
+    private static void processMeme(String meme, Map<TimelineContext, Timeline>  timelines) throws IOException, ParseException {
         // COB process()
         CobProcessor.processCob(meme, timelines);
 
@@ -147,7 +154,21 @@ public class Main {
     }
 
     private static void processCob(List<Timeline> cobLines) {
-
+        LocalDate today = new LocalDate();
+        LocalDate minDate = today.minus(lookback);
+        for(LocalDate day = new LocalDate(); day.isAfter(minDate); day.minusDays(1)) {
+            int totalPrimary = 0;
+            for(Timeline cob : cobLines) {
+                if (StringUtils.equals(ObjectUtils.toString(cob.get(day)), "P")) {
+                    totalPrimary++;
+                }
+            }
+            if(totalPrimary > 1) {
+                for(Timeline cob: cobLines) {
+                    cob.storeVector(day, day, null);
+                }
+            }
+        }
     }
 
     private static void ouputAllRows(BufferedWriter writer, Deque<Map<TimelineContext, Timeline>> rawRows) {
