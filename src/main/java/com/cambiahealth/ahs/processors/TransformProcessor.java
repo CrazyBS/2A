@@ -126,6 +126,7 @@ public class TransformProcessor {
         transformedResult.put("Host_Plan_Code",Host_Plan_Code);
         transformedResult.put("Home_Plan_Corporate_Plan_Code",Home_Plan_Corporate_Plan_Code);
         transformedResult.put("Pharmacy_Carve_Out_Indicator",Pharmacy_Carve_Out_Indicator);
+        
         return transformedResult;
     }
 
@@ -167,6 +168,26 @@ public class TransformProcessor {
         String NDW_PROD_CAT_CD = "PPO";
         String GRP_OR_INDIVL_CNTRCT_CD = "GROUP";
         String MBR_MED_COB_CD = data.get("");
+
+
+        transformedResult.put("MBR_ID",MBR_ID);
+        transformedResult.put("MBR_EFF_DT",MBR_EFF_DT);
+        transformedResult.put("HOME_PLN_MBR_ID",HOME_PLN_MBR_ID);
+        transformedResult.put("BCBSA_CMI",BCBSA_CMI);
+        transformedResult.put("BCBSA_MMI",BCBSA_MMI);
+        transformedResult.put("MBR_CONFDNTL_CD",MBR_CONFDNTL_CD);
+        transformedResult.put("ALPH_PFX",ALPH_PFX);
+        transformedResult.put("MBR_NAME_PFX",MBR_NAME_PFX);
+        transformedResult.put("MBR_NAME_SFX",MBR_NAME_SFX);
+        transformedResult.put("VOID_IND",VOID_IND);
+        transformedResult.put("NDW_HOME_PLN_CD",NDW_HOME_PLN_CD);
+        transformedResult.put("NDW_HOST_PLN_CD",NDW_HOST_PLN_CD);
+        transformedResult.put("NDW_HOST_PLN_OVRRD_CD",NDW_HOST_PLN_OVRRD_CD);
+        transformedResult.put("NDW_HOME_PLN_CORP_PLN_CD",NDW_HOME_PLN_CORP_PLN_CD);
+        transformedResult.put("NDW_HOST_PLN_CORP_PLN_CD",NDW_HOST_PLN_CORP_PLN_CD);
+        transformedResult.put("NDW_PROD_CAT_CD",NDW_PROD_CAT_CD);
+        transformedResult.put("GRP_OR_INDIVL_CNTRCT_CD",GRP_OR_INDIVL_CNTRCT_CD);
+        transformedResult.put("MBR_MED_COB_CD",MBR_MED_COB_CD);
 
         return transformedResult;
     }
