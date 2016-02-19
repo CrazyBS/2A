@@ -30,7 +30,7 @@ public class AddressProcessor {
         zipReader = resolver.getFile(FileDescriptor.ZIP_CODE_EXTRACT);
     }
 
-    public static void processAddress(String MEME, Map<TimelineContext, Timeline> timelines) throws IOException {
+    public static Timeline processAddress(String MEME, Map<TimelineContext, Timeline> timelines) throws IOException {
         Timeline confTimeline = new Timeline();
         Timeline subTimeline = new Timeline();
         Timeline primaryTimeline = new Timeline();
@@ -95,6 +95,8 @@ public class AddressProcessor {
                 break;
             }
         }
+
+        return primaryTimeline;
     }
 
     public static void shutdown() throws IOException {

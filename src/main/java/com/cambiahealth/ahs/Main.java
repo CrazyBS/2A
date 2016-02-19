@@ -5,7 +5,9 @@ import com.cambiahealth.ahs.file.FileDescriptor;
 import com.cambiahealth.ahs.file.FlatFileReader;
 import com.cambiahealth.ahs.file.FlatFileResolverFactory;
 import com.cambiahealth.ahs.file.IFlatFileResolver;
+import com.cambiahealth.ahs.processors.AddressProcessor;
 import com.cambiahealth.ahs.processors.CobProcessor;
+import com.cambiahealth.ahs.processors.EligibilityProcessor;
 import com.cambiahealth.ahs.processors.NameProcessor;
 import com.cambiahealth.ahs.timeline.Timeline;
 import com.cambiahealth.ahs.timeline.TimelineContext;
@@ -79,7 +81,7 @@ public class Main {
         shutdownProcessors();
     }
 
-    private static void initializeProcessors(IFlatFileResolver resolver) throws FileNotFoundException {
+    private static void initializeProcessors(IFlatFileResolver resolver) throws IOException {
         // COB init()
         CobProcessor.initialize(resolver);
 
@@ -89,6 +91,7 @@ public class Main {
         NameProcessor.initialize(resolver);
 
         // Eligibility init()
+        EligibilityProcessor.initialize(resolver);
     }
 
     private static void shutdownProcessors() throws IOException {
@@ -101,6 +104,7 @@ public class Main {
         NameProcessor.shutdown();
 
         // Eligibility shutdown()
+        EligibilityProcessor.shutdown();
     }
 
     private static void beginProcessing(IFlatFileResolver resolver) throws IOException, ParseException {
@@ -112,10 +116,10 @@ public class Main {
         Map<String, String> currentLine = null;
 
         Deque<Map<TimelineContext, Timeline>> rawRows = new ArrayDeque<Map<TimelineContext, Timeline>>();
-        Map<TimelineContext, Timeline> timelines = new HashMap<TimelineContext, Timeline>();
 
         // Walk through AcorsEligibility
         while(null != (currentLine = reader.readColumn())) {
+            Map<TimelineContext, Timeline> timelines = new HashMap<TimelineContext, Timeline>();
             String lineCtgId = currentLine.get(AcorsEligibility.CTG_ID.toString());
             String lineMemeCk = currentLine.get(AcorsEligibility.MEME_CK.toString());
 
@@ -125,9 +129,9 @@ public class Main {
                continue;
             }
 
-            // If CTG has changed, process COB
-            // then output row
-            if(!StringUtils.equals(lineCtgId, ctgId)) {
+            // If CTG has changed and there is rows to output,
+            // process COB then output row
+            if(!StringUtils.equals(lineCtgId, ctgId) && !rawRows.isEmpty()) {
                 ouputAllRows(writer, rawRows);
                 rawRows.clear();
             }
@@ -136,8 +140,9 @@ public class Main {
             ctgId = lineCtgId;
             memeCk = lineMemeCk;
 
-            processMeme(lineMemeCk, timelines);
-            rawRows.addLast(timelines);
+            if(processMeme(lineMemeCk, timelines)) {
+                rawRows.addLast(timelines);
+            }
         }
 
         // Output the rest of the rows
@@ -145,16 +150,26 @@ public class Main {
         rawRows.clear();
     }
 
-    private static void processMeme(String meme, Map<TimelineContext, Timeline>  timelines) throws IOException, ParseException {
+    private static boolean processMeme(String meme, Map<TimelineContext, Timeline>  timelines) throws IOException, ParseException {
+        // Address process()
+        Timeline address = AddressProcessor.processAddress(meme, timelines);
+        if(address.isEmpty()) {
+            return false;
+        }
+
+        // Eligibility process()
+        Timeline elig = EligibilityProcessor.processEligibiltiy(meme, timelines);
+        if(elig.isEmpty()) {
+            return false;
+        }
+
         // COB process()
         CobProcessor.processCob(meme, timelines);
-
-        // Address process()
 
         // NameProcessor process()
         NameProcessor.processName(meme, timelines);
 
-        // Eligibility process()
+        return true;
     }
 
     private static void processCob(List<Timeline> cobLines) {
