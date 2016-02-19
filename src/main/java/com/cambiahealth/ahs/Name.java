@@ -2,31 +2,30 @@ package com.cambiahealth.ahs;
 
 import com.cambiahealth.ahs.file.FileDescriptor;
 import com.cambiahealth.ahs.file.FlatFileReader;
-import com.cambiahealth.ahs.file.FlatFileResolverFactory;
 import com.cambiahealth.ahs.file.IFlatFileResolver;
 import com.cambiahealth.ahs.timeline.Timeline;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import org.joda.time.LocalDate;
 
 /**
  * Created by msnook on 2/18/2016.
  */
 public class Name {
     private enum NAMECOLUMNS {
-        MEME_CK, START_DT, END_DT, FIRST_NAME, LAST_NAME
-    }
+        MEME_CK("MEME_CK"),
+        START_DT("START_DT"),
+        END_DT("END_DT"),
+        FIRST_NAME("FIRST_NAME"),
+        LAST_NAME("LAST_NAME");
 
-    private enum FILES {
-        COB, ADDRESS, NAME, ELIGTY
-    }
+        public final String columnName;
 
-    private class NameLine {
-        public NameLine(){
-
+        private NAMECOLUMNS(String columnName){
+            this.columnName = columnName;
         }
     }
 
@@ -34,6 +33,8 @@ public class Name {
     {
         FlatFileReader reader;
         Map<String, String> storedLine = new HashMap<String, String>();
+        LocalDate storedStart = new LocalDate();
+        LocalDate storedEnd = new LocalDate();
 
         try {
             reader = resolver.getFile(FileDescriptor.CONFIDENTIAL_ADDRESS_EXTRACT);
@@ -48,7 +49,7 @@ public class Name {
                 line = reader.readColumn();
             } catch (IOException e) {
                 if(!storedLine.isEmpty()){
-                    timeline.storeVector(storedLine.get(NAMECOLUMNS.START_DT),storedLine.get(NAMEDCOLUMNS.END_DT), storedLine);
+                    timeline.storeVector(storedStart, storedEnd, storedLine);
                 } else{
                     e.printStackTrace();
                 }
@@ -57,16 +58,21 @@ public class Name {
 
             if (line.get(NAMECOLUMNS.MEME_CK) != MEME) {
                 reader.unRead();
-                timeline.storeVector(storedLine.get(NAMECOLUMNS.START_DT),storedLine.get(NAMEDCOLUMNS.END_DT), storedLine);
+                timeline.storeVector(storedStart, storedEnd, storedLine);
                 break;
             } else {
                 if(storedLine.isEmpty()) {
                     storedLine = new HashMap<String,String>(line);
+                    storedStart = new LocalDate(line.get(NAMECOLUMNS.START_DT.columnName));
+                    storedEnd = new LocalDate(line.get(NAMECOLUMNS.END_DT.columnName));
                 } else if(!line.get(NAMECOLUMNS.FIRST_NAME).equals(storedLine.get(NAMECOLUMNS.FIRST_NAME)) || !line.get(NAMECOLUMNS.LAST_NAME).equals(storedLine.get(NAMECOLUMNS.LAST_NAME))){
-                    timeline.storeVector(storedLine.get(NAMECOLUMNS.START_DT),storedLine.get(NAMEDCOLUMNS.END_DT), storedLine);
+                    timeline.storeVector(storedStart, storedEnd, storedLine);
                     storedLine = new HashMap<String,String>(line);
+                    storedStart = new LocalDate(line.get(NAMECOLUMNS.START_DT.columnName));
+                    storedEnd = new LocalDate(line.get(NAMECOLUMNS.END_DT.columnName));
                 } else{
-                    storedLine.put(NAMECOLUMNS.END_DT,line.get(NAMECOLUMNS.END_DT));
+                    storedLine = new HashMap<String,String>(line);
+                    storedEnd = new LocalDate(line.get(NAMECOLUMNS.END_DT.columnName));
                 }
             }
         }
