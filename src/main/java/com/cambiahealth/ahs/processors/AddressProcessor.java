@@ -63,9 +63,9 @@ public class AddressProcessor {
                     continue;
                 } else if(rowTest == 0) {
                     if(zipCodes.contains(line.get(ConfidentialAddress.ENAD_ZIP.toString()))){
-                        rejectTimeline.storeVector(new LocalDate(line.get(ConfidentialAddress.PMCC_EFF_DT.toString())), new LocalDate(line.get(ConfidentialAddress.PMCC_TERM_DTM.toString())), line);
-                    } else {
                         confTimeline.storeVector(new LocalDate(line.get(ConfidentialAddress.PMCC_EFF_DT.toString())), new LocalDate(line.get(ConfidentialAddress.PMCC_TERM_DTM.toString())), line);
+                    } else {
+                        rejectTimeline.storeVector(new LocalDate(line.get(ConfidentialAddress.PMCC_EFF_DT.toString())), new LocalDate(line.get(ConfidentialAddress.PMCC_TERM_DTM.toString())), line);
                     }
                 } else {
                     confReader.unRead();
