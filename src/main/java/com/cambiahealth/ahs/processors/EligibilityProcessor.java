@@ -1,9 +1,6 @@
 package com.cambiahealth.ahs.processors;
 
-import com.cambiahealth.ahs.entity.AcorsEligibility;
-import com.cambiahealth.ahs.entity.ClaimsConfig;
-import com.cambiahealth.ahs.entity.Cob;
-import com.cambiahealth.ahs.entity.CspiHistory;
+import com.cambiahealth.ahs.entity.*;
 import com.cambiahealth.ahs.file.FileDescriptor;
 import com.cambiahealth.ahs.file.FlatFileReader;
 import com.cambiahealth.ahs.file.IFlatFileResolver;
@@ -27,13 +24,15 @@ import java.util.*;
 public class EligibilityProcessor {
     private static FlatFileReader acorsReader;
     private static FlatFileReader cspiReader;
+    private static FlatFileReader confEmailPhoneReader;
     private static Map<String, String> claimConfig = new HashMap<String, String>();
 
-    private static DateFormat format = new SimpleDateFormat("YYYY-mm-DD");
+    private static DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 
     public static void initialize(IFlatFileResolver resolver) throws IOException {
         acorsReader = resolver.getFile(FileDescriptor.ACORS_ELIGIBILITY_EXTRACT);
         cspiReader = resolver.getFile(FileDescriptor.CSPI_EXTRACT);
+        confEmailPhoneReader = resolver.getFile(FileDescriptor.CONFIDENTIAL_EMAIL_PHONE_EXTRACT);
 
         FlatFileReader reader = resolver.getFile(FileDescriptor.CLAIMS_CONFIG_EXTRACT);
         Map<String, String> row;
@@ -43,37 +42,58 @@ public class EligibilityProcessor {
         reader.close();
     }
 
-    public static Timeline processEligibiltiy(String meme, Map<TimelineContext, Timeline> timelines) throws IOException, ParseException {
+    public static Timeline processEligibiltiy(String ctgId, String meme, Map<TimelineContext, Timeline> timelines) throws IOException, ParseException {
         Timeline timeline = new Timeline();
 
         // We'll use buffers to make the logic easier to manage
         // It could be done by traversing, but we should be okay.
         Deque<Map<String, String>> acorsLines = new ArrayDeque<Map<String, String>>();
         List<Map<String, String>> cspiLines = new ArrayList<Map<String, String>>();
+        List<Map<String, String>> confEmailPhoneList = new ArrayList<Map<String, String>>();
 
-        collectLines(acorsReader, meme, AcorsEligibility.MEME_CK.toString(), acorsLines);
+        collectLines(acorsReader, ctgId, meme, AcorsEligibility.MEME_CK.toString(), acorsLines);
 
         if(!acorsLines.isEmpty()) {
             // Scroll both reader to the current meme under test
-            collectLines(cspiReader, meme, CspiHistory.MEME_CK.toString(), cspiLines);
+            collectLines(cspiReader, null, meme, CspiHistory.MEME_CK.toString(), cspiLines);
 
-            // Okay, now we have all of our data, let's try joining them together
-            for(Map<String, String> acorsLine : acorsLines) {
-                AcorsToCspiKey key = new AcorsToCspiKey(true, acorsLine);
+            if(!cspiLines.isEmpty()) {
+                // Okay, now we have all of our data, let's try joining them together
+         acors: for(Map<String, String> acorsLine : acorsLines) {
+                    AcorsToCspiKey key = new AcorsToCspiKey(true, acorsLine);
 
-                for(Map<String, String> cspiLine: cspiLines) {
-                    AcorsToCspiKey cspiKey = new AcorsToCspiKey(false, cspiLine);
+                    for(Map<String, String> cspiLine: cspiLines) {
+                        AcorsToCspiKey cspiKey = new AcorsToCspiKey(false, cspiLine);
 
-                    if(key.equals(cspiKey)) {
-                        // We match, let's look for date match
-                        DateTime acorStart = new DateTime(format.parse(acorsLine.get(AcorsEligibility.MEME_EFFECTIVE_DATE.toString())));
-                        DateTime cspiStart = new DateTime(format.parse(cspiLine.get(CspiHistory.CSPI_EFF_DT.toString())));
-                        DateTime cspiEnd = new DateTime(format.parse(cspiLine.get(CspiHistory.CSPI_TERM_DT.toString())));
+                        if(key.equals(cspiKey)) {
+                            // We match, let's look for date match
+                            DateTime acorStart = new DateTime(format.parse(acorsLine.get(AcorsEligibility.MEME_EFFECTIVE_DATE.toString())));
+                            DateTime acorEnd = new DateTime(format.parse(acorsLine.get(AcorsEligibility.MEME_TERMINATION_DATE.toString())));
+                            DateTime cspiStart = new DateTime(format.parse(cspiLine.get(CspiHistory.CSPI_EFF_DT.toString())));
+                            DateTime cspiEnd = new DateTime(format.parse(cspiLine.get(CspiHistory.CSPI_TERM_DT.toString())));
 
-                        if(new Interval(cspiStart, cspiEnd).contains(acorStart)) {
-                            // We have a complete match!
-                            // Collect the rest of the data
+                            if(new Interval(cspiStart, cspiEnd).contains(acorStart)) {
+                                // We have a complete match!
+                                // Collect the rest of the data
+                                collectLines(confEmailPhoneReader, null, meme, ConfidentialEmailPhone.MEME_CK.toString(), confEmailPhoneList);
+                                String plan = claimConfig.get(cspiLine.get(CspiHistory.CSPI_ITS_PREFIX.toString()));
 
+                                if(plan.isEmpty()) {
+                                    continue acors;
+                                }
+
+                                acorsLine.put(CspiHistory.CSPI_ITS_PREFIX.toString(), cspiLine.get(CspiHistory.CSPI_ITS_PREFIX.toString()));
+                                acorsLine.put(CspiHistory.SBSB_ID.toString(), cspiLine.get(CspiHistory.SBSB_ID.toString()));
+                                acorsLine.put(ClaimsConfig.PLAN.toString(), plan);
+
+                                if(!confEmailPhoneList.isEmpty()) {
+                                    acorsLine.put(ConfidentialEmailPhone.ENEM_EMAIL.toString(), confEmailPhoneList.get(0).get(ConfidentialEmailPhone.ENEM_EMAIL.toString()));
+                                    acorsLine.put(ConfidentialEmailPhone.ENPH_PHONE.toString(), confEmailPhoneList.get(0).get(ConfidentialEmailPhone.ENPH_PHONE.toString()));
+                                }
+
+                                timeline.storeVector(new LocalDate(acorStart), new LocalDate(acorEnd), acorsLine);
+                                continue acors;
+                            }
                         }
                     }
                 }
@@ -81,7 +101,7 @@ public class EligibilityProcessor {
         }
 
         // If this returns an empty timeline, we can cancel the rest of the processing on this row
-        timelines.put(TimelineContext.COB, timeline);
+        timelines.put(TimelineContext.ELIGIBILITY, timeline);
         return timeline;
     }
 
@@ -93,12 +113,20 @@ public class EligibilityProcessor {
         cspiReader = null;
     }
 
-    private static boolean collectLines(FlatFileReader reader, String meme, String memeColumnName, Collection<Map<String, String>> collection) throws IOException {
+    private static boolean collectLines(FlatFileReader reader, String ctgId, String meme, String memeColumnName, Collection<Map<String, String>> collection) throws IOException {
         Map<String, String> line;
         while(null != (line = reader.readColumn())) {
-            int rowTest = meme.compareTo(line.get(memeColumnName));
+            int rowTest;
+            if(null != ctgId) {
+                String ctgIdLine = line.get(AcorsEligibility.CTG_ID.toString());
+                String memeCk = line.get(memeColumnName);
+                rowTest = (ctgId + meme).compareTo(ctgIdLine + memeCk);
+            } else {
+                String memeCk = line.get(memeColumnName);
+                rowTest = meme.compareTo(memeCk);
+            }
 
-            if (rowTest > 0) {
+            if (rowTest < 0) {
                 // We passed it!
                 reader.unRead();
                 break;

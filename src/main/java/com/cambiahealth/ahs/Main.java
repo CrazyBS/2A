@@ -142,7 +142,7 @@ public class Main {
             ctgId = lineCtgId;
             memeCk = lineMemeCk;
 
-            if(processMeme(lineMemeCk, timelines)) {
+            if(processMeme(lineCtgId, lineMemeCk, timelines)) {
                 rawRows.addLast(timelines);
             }
         }
@@ -152,7 +152,7 @@ public class Main {
         rawRows.clear();
     }
 
-    private static boolean processMeme(String meme, Map<TimelineContext, Timeline>  timelines) throws IOException, ParseException {
+    private static boolean processMeme(String ctgId, String meme, Map<TimelineContext, Timeline>  timelines) throws IOException, ParseException {
         // Address process()
         Timeline address = AddressProcessor.processAddress(meme, timelines);
         if(address.isEmpty()) {
@@ -160,7 +160,7 @@ public class Main {
         }
 
         // Eligibility process()
-        Timeline elig = EligibilityProcessor.processEligibiltiy(meme, timelines);
+        Timeline elig = EligibilityProcessor.processEligibiltiy(ctgId, meme, timelines);
         if(elig.isEmpty()) {
             return false;
         }
@@ -193,7 +193,7 @@ public class Main {
     }
 
     private static void ouputAllRows(BufferedWriter writer, Deque<Map<TimelineContext, Timeline>> rawRows) {
-        // Process the COB accross CTG if needed
+        // Process the COB across CTG if needed
         if(rawRows.size() > 1) {
             List<Timeline> cobLines = new ArrayList<Timeline>();
             for(Map<TimelineContext, Timeline> lines : rawRows) {

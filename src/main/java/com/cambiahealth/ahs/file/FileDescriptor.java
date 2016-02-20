@@ -1,9 +1,6 @@
 package com.cambiahealth.ahs.file;
 
-import com.cambiahealth.ahs.entity.AcorsEligibility;
-import com.cambiahealth.ahs.entity.ClaimsConfig;
-import com.cambiahealth.ahs.entity.Cob;
-import com.cambiahealth.ahs.entity.ZipCode;
+import com.cambiahealth.ahs.entity.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,12 +17,12 @@ public enum FileDescriptor {
     COB_EXTRACT(asList(enumNameToStringArray(Cob.values()))),
     ZIP_CODE_EXTRACT(asList(enumNameToStringArray(ZipCode.values()))),
     CLAIMS_CONFIG_EXTRACT(asList(enumNameToStringArray(ClaimsConfig.values()))),
-    MEMBER_HISTORY_EXTRACT(newArrayList("")),
-    CONFIDENTIAL_ADDRESS_EXTRACT(newArrayList("")),
-    SUBSCRIBER_ADDRESS_EXTRACT(newArrayList("")),
-    CONFIDENTIAL_EMAIL_PHONE_EXTRACT(newArrayList("")),
-    CSPI_EXTRACT(newArrayList("")),
-    FINAL_2A_OUTPUT(newArrayList(""));
+    MEMBER_HISTORY_EXTRACT(asList(enumNameToStringArray(MemberHistory.values()))),
+    CONFIDENTIAL_ADDRESS_EXTRACT(asList(enumNameToStringArray(ConfidentialAddress.values()))),
+    SUBSCRIBER_ADDRESS_EXTRACT(asList(enumNameToStringArray(SubscriberAddress.values()))),
+    CONFIDENTIAL_EMAIL_PHONE_EXTRACT(asList(enumNameToStringArray(ConfidentialEmailPhone.values()))),
+    CSPI_EXTRACT(asList(enumNameToStringArray(CspiHistory.values()))),
+    FINAL_2A_OUTPUT(Collections.singletonList(""));
 
     private List<String> schema;
 
