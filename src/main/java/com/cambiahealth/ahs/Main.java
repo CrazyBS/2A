@@ -227,41 +227,54 @@ public class Main {
         LocalDate date = today;
         LocalDate tmpEnd = date;
 
-        while(date.compareTo(threeYear)>0){
+        while(date.compareTo(threeYear)>0) {
 
-
-            curDay.putAll(cob.get(date));
-            testMap = name.get(date);
-            if(!testMap.isEmpty()) {
-                curDay.putAll(testMap);
-            }else{
-                date = date.minusDays(1);
-                continue;
+            curDay.clear();
+            if (cob.get(date) != null) {
+                curDay.putAll(cob.get(date));
+            }
+            if (name.get(date) != null){
+                curDay.putAll(name.get(date));
             }
             testMap = primaryAddress.get(date);
-            if(!testMap.isEmpty()) {
+            if(testMap!=null) {
                 curDay.putAll(testMap);
-            }else{
-                date = date.minusDays(1);
-                continue;
             }
-            curDay.putAll(secondaryAddress.get(date));
-            curDay.putAll(eligibility.get(date));
-
-            if(date.equals(today)){
-                nextDay = curDay;
-                date = date.minusDays(1);
-                continue;
+            if(secondaryAddress.get(date)!=null) {
+                curDay.putAll(secondaryAddress.get(date));
             }
-            if(!nextDay.equals(curDay)){
-                if(tmpEnd.compareTo(twoYear)>0){
-                    cane.storeVector(date.plusDays(1),tmpEnd,nextDay);
+            testMap = eligibility.get(date);
+            if (testMap != null){
+               curDay.putAll(testMap);
+            }
+            if(!nextDay.isEmpty()&&!nextDay.equals(curDay)){
+                if(tmpEnd.compareTo(twoYear)>0&&primaryAddress.get(date.plusDays(1))!=null&&eligibility.get(date.plusDays(1))!=null){
+                    HashMap<String,String> stored = new HashMap<String, String>();
+                    stored.putAll(nextDay);
+                    cane.storeVector(date.plusDays(1),tmpEnd,stored);
                 }
                 tmpEnd = date;
             }
 
-            nextDay = curDay;
+            nextDay.clear();
+            if(cob.get(date)!=null){
+                nextDay.putAll(cob.get(date));
+            }
+            if(name.get(date)!=null) {
+                nextDay.putAll(name.get(date));
+            }
+            if(primaryAddress.get(date)!=null) {
+                nextDay.putAll(primaryAddress.get(date));
+            }
+            if(secondaryAddress.get(date)!=null) {
+                nextDay.putAll(secondaryAddress.get(date));
+            }
+            if(eligibility.get(date)!=null) {
+                nextDay.putAll(eligibility.get(date));
+            }
 
+            date = date.minusDays(1);
         }
+        int i =0;
     }
 }
