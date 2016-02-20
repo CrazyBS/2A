@@ -209,7 +209,7 @@ public class Main {
         }
     }
 
-    private static void outputRowTo2A(BufferedWriter writer, Map<TimelineContext, Timeline> timelines) {
+    static void outputRowTo2A(BufferedWriter writer, Map<TimelineContext, Timeline> timelines) {
         Timeline cob = timelines.get(TimelineContext.COB);
         Timeline name = timelines.get(TimelineContext.NAME);
         Timeline primaryAddress = timelines.get(TimelineContext.ADDRESS_PRIMARY);
