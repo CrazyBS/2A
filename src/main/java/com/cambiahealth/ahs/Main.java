@@ -39,8 +39,8 @@ public class Main {
         descriptors.put(FileDescriptor.MEMBER_HISTORY_EXTRACT, "");
         descriptors.put(FileDescriptor.SUBSCRIBER_ADDRESS_EXTRACT, "");
         descriptors.put(FileDescriptor.ZIP_CODE_EXTRACT, "");
-        descriptors.put(FileDescriptor.FINAL_2A_OUTPUT, "");
         descriptors.put(FileDescriptor.BCBSA_MBR_PFX_SFX_XREF, "");
+        descriptors.put(FileDescriptor.FINAL_2A_OUTPUT, "");
 
         FlatFileResolverFactory factory = new FlatFileResolverFactory(false);
         IFlatFileResolver resolver = factory.getInstance(descriptors);

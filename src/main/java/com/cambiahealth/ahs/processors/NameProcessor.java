@@ -21,12 +21,11 @@ import org.joda.time.LocalDate;
  */
 public class NameProcessor {
     private static FlatFileReader reader;
-    private static FlatFileReader fixReader;
     private static Map<String, Map<String, String>> fixes;
 
     public static void initialize(IFlatFileResolver resolver) throws IOException {
         reader = resolver.getFile(FileDescriptor.MEMBER_HISTORY_EXTRACT);
-        fixReader = resolver.getFile(FileDescriptor.BCBSA_MBR_PFX_SFX_XREF);
+        FlatFileReader fixReader = resolver.getFile(FileDescriptor.BCBSA_MBR_PFX_SFX_XREF);
 
         fixes = new HashMap<String, Map<String, String>>();
 
@@ -40,7 +39,7 @@ public class NameProcessor {
                 lineData.put(BcbsaMbrPfxSfxXref.BCBSA_MBR_SFX.toString(),line.get(BcbsaMbrPfxSfxXref.BCBSA_MBR_SFX.toString()));
                 lineData.put(BcbsaMbrPfxSfxXref.BCBSA_MBR_PFX.toString(),line.get(BcbsaMbrPfxSfxXref.BCBSA_MBR_PFX.toString()));
 
-                fixes.put(line.get(BcbsaMbrPfxSfxXref.MEME_TITLE.toString()), new HashMap<String, String>());
+                fixes.put(line.get(BcbsaMbrPfxSfxXref.MEME_TITLE.toString()), lineData);
             }
         }
     }
@@ -54,7 +53,15 @@ public class NameProcessor {
         while(true) {
             Map<String, String> line;
             line = reader.readColumn();
-            line.putAll(new HashMap<String,String>(fixes.get(MEME)));
+            if(null != line) {
+                String key = line.get(MemberHistory.MEME_TITLE.toString());
+                if(null != key) {
+                    Map<String, String> values = fixes.get(key);
+                    if(null != values) {
+                        line.putAll(values);
+                    }
+                }
+            }
             if(line != null){
                 if (!StringUtils.equals(line.get(MemberHistory.MEME_CK.toString()), MEME)) {
                     if (!storedLine.isEmpty()){

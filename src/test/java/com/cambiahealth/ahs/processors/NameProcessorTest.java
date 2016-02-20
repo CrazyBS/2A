@@ -1,5 +1,6 @@
 package com.cambiahealth.ahs.processors;
 
+import com.cambiahealth.ahs.entity.BcbsaMbrPfxSfxXref;
 import com.cambiahealth.ahs.file.FileDescriptor;
 import com.cambiahealth.ahs.file.FlatFileResolverFactory;
 import com.cambiahealth.ahs.file.IFlatFileResolver;
@@ -11,7 +12,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,13 +23,14 @@ public class NameProcessorTest {
     private static Map<FileDescriptor, String> descriptors = new HashMap<FileDescriptor, String>();
     static {{
         descriptors.put(FileDescriptor.MEMBER_HISTORY_EXTRACT, "OOA_Member_Extract.dat");
+        descriptors.put(FileDescriptor.BCBSA_MBR_PFX_SFX_XREF, "OOA_Title_Extract.dat");
     }}
 
     private static FlatFileResolverFactory factory = new FlatFileResolverFactory(true);
     private static IFlatFileResolver resolver = factory.getInstance(descriptors);
 
     @Before
-    public void before() throws FileNotFoundException {
+    public void before() throws IOException {
         NameProcessor.initialize(resolver);
     }
 
@@ -113,6 +114,19 @@ public class NameProcessorTest {
         Assert.assertEquals(last, timelines.get(TimelineContext.NAME).get(new LocalDate(2015,1,1)));
         Assert.assertEquals(last, timelines.get(TimelineContext.NAME).get(new LocalDate(2199,12,31)));
         Assert.assertNotEquals(last, timelines.get(TimelineContext.NAME).get(new LocalDate(2014,12,31)));
+    }
+
+    @Test
+    public void testPrefixSufficLookup() throws IOException {
+        Map<TimelineContext, Timeline> timelines = new HashMap<TimelineContext, Timeline>();
+        NameProcessor.processName("100196303", timelines);
+
+        // 100196303|2015-01-01|2199-12-31|DR|BAR|FOO|F|D
+
+        Assert.assertNotNull(timelines.get(TimelineContext.NAME));
+
+        Assert.assertEquals("Dr", timelines.get(TimelineContext.NAME).get(new LocalDate(2015,1,1)).get(BcbsaMbrPfxSfxXref.BCBSA_MBR_PFX.toString()));
+        Assert.assertNull(timelines.get(TimelineContext.NAME).get(new LocalDate(2015,1,1)).get(BcbsaMbrPfxSfxXref.BCBSA_MBR_SFX.toString()));
     }
 
     @Test
