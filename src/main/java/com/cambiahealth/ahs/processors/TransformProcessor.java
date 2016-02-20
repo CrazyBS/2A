@@ -49,7 +49,7 @@ public class TransformProcessor {
         String Member_Secondary_ZIP_Code_4 ="";// (null == data.get("")) ? "" : data.get("").substring(5,8);
         String Host_Plan_Override = (null == data.get(AcorsEligibility.HOST_PLAN_OVERRIDE.toString())) ? "" : data.get(AcorsEligibility.HOST_PLAN_OVERRIDE.toString());
         String Member_Participation_Code = (null == data.get(AcorsEligibility.ATTRIBUTION_PARN_IND.toString())) ? "N" : data.get(AcorsEligibility.ATTRIBUTION_PARN_IND.toString());
-        String Member_Medical_COB_Code = data.get(Cob.COB_VALUE.toString());
+        String Member_Medical_COB_Code = (null == data.get(Cob.COB_VALUE.toString())) ? "P" : (data.get(Cob.COB_VALUE.toString()).equals("P")) ? "S" : "M";
         String Void_Indicator = "N";
         String MMI_Indicator = "";
         String Host_Plan_Code = "";
