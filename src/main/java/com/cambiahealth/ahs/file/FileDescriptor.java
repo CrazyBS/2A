@@ -22,7 +22,8 @@ public enum FileDescriptor {
     SUBSCRIBER_ADDRESS_EXTRACT(asList(enumNameToStringArray(SubscriberAddress.values()))),
     CONFIDENTIAL_EMAIL_PHONE_EXTRACT(asList(enumNameToStringArray(ConfidentialEmailPhone.values()))),
     CSPI_EXTRACT(asList(enumNameToStringArray(CspiHistory.values()))),
-    FINAL_2A_OUTPUT(Collections.singletonList(""));
+    FINAL_2A_OUTPUT(Collections.singletonList("")),
+    BCBSA_MBR_PFX_SFX_XREF(asList(enumNameToStringArray(BcbsaMbrPfxSfxXref.values())));
 
     private List<String> schema;
 
