@@ -14,13 +14,12 @@ public class FlatFileResolverFactory {
     }
 
     public IFlatFileResolver getInstance(Map<FileDescriptor, String> descriptors) {
-        if(null == instance) {
-            if(isTest) {
-                instance = new ResourceFlatFileResolver(descriptors);
-            } else {
-                instance = new FileFlatFileResolver(descriptors);
-            }
+        if(isTest) {
+            return new ResourceFlatFileResolver(descriptors);
+        } else if(null == instance) {
+            instance = new FileFlatFileResolver(descriptors);
         }
+
         return instance;
     }
 }
