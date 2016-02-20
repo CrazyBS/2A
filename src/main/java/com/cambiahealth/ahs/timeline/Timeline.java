@@ -16,7 +16,7 @@ public class Timeline {
         return timeline.isEmpty();
     }
 
-    public int storeVector(LocalDate start, LocalDate end, Object data) {
+    public int storeVector(LocalDate start, LocalDate end, Map<String,String> data) {
         LocalDate startTime = new LocalDate(start);
         LocalDate endTime = new LocalDate(end);
 
@@ -97,7 +97,7 @@ public class Timeline {
         return Math.abs(Days.daysBetween(startTime, endTime).getDays());
     }
 
-    public Object get(LocalDate index) {
+    public Map<String, String> get(LocalDate index) {
         // Find the date that intersects this one and return the object
         ListIterator<TimeVector> iter = timeline.listIterator();
         LocalDate day = new LocalDate(index);
@@ -120,6 +120,12 @@ public class Timeline {
     public void addAll(Timeline timeline) {
         for(TimeVector vector : timeline.timeline) {
             this.storeVector(vector.getStart(), vector.getEnd(), vector.getStoredObject());
+        }
+    }
+
+    public void removeAll(Timeline timeline) {
+        for(TimeVector vector : timeline.timeline) {
+            this.storeVector(vector.getStart(), vector.getEnd(), null);
         }
     }
 
