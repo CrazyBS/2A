@@ -3,6 +3,7 @@ package com.cambiahealth.ahs.file;
 import com.cambiahealth.ahs.entity.Column;
 import com.cambiahealth.ahs.processors.TransformProcessor;
 import org.joda.time.LocalDate;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -77,5 +78,11 @@ public class FlatFileWriterTest {
         Assert.assertEquals("TEST T", result.substring(0,6));
         Assert.assertEquals("YET", result.substring(20,23));
         Assert.assertEquals("     ", result.substring(60,65));
+    }
+
+    @After
+    public void after() throws IOException {
+        writer.flush();
+        writer.close();
     }
 }
