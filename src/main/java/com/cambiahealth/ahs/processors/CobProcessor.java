@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -54,7 +55,9 @@ public class CobProcessor {
                 LocalDate end = new LocalDate(format.parse(line.get(Cob.COB_TERMINATION_DATE.toString())));
 
                 // The data should be sorted MEME_CK, M then P, START_DATE
-                timeline.storeVector(start, end, line.get(Cob.COB_VALUE.toString()));
+                Map<String, String> results = new HashMap<String, String>();
+                results.put(Cob.COB_VALUE.toString(), line.get(Cob.COB_VALUE.toString()));
+                timeline.storeVector(start, end, results);
             } else if (rowTest > 0){
                 // We passed it!
                 reader.unRead();

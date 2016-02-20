@@ -51,43 +51,33 @@ public class EligibilityProcessorTest {
         Map<TimelineContext, Timeline> timelines = new HashMap<TimelineContext, Timeline>();
         EligibilityProcessor.processEligibiltiy("995999996003366","136091253", timelines);
         Map<String, String> expectedElig = new HashMap<String, String>();
-        //expectedElig.put()
-        expectedElig.put("CTG_ID", "100671251");
+
+        // 995999996003366|136091253|2014-09-01|2014-12-31|MCUS1001|0001|F|D|1960-01-01|OMO12345|Y|N|
+        // 136091253|MCUS1001|0001|2014-09-01 00:00:00|2014-12-31 00:00:00|PQL|100000300
+        expectedElig.put("CTG_ID", "995999996003366");
         expectedElig.put("PRODUCT_ID", "OMO12345");
-        expectedElig.put("MEME_CK", "100671251");
-        expectedElig.put("CSPI_ID", "MESA2001");
+        expectedElig.put("MEME_CK", "136091253");
+        expectedElig.put("CSPI_ID", "MCUS1001");
         expectedElig.put("DOB", "1960-01-01");
         expectedElig.put("PLAN", "851");
-        expectedElig.put("MEME_EFFECTIVE_DATE", "2016-02-01");
+        expectedElig.put("MEME_EFFECTIVE_DATE", "2014-09-01");
         expectedElig.put("CSPI_ITS_PREFIX", "PQL");
-        expectedElig.put("CSCS_ID", "0003");
+        expectedElig.put("CSCS_ID", "0001");
         expectedElig.put("MASK_IND", "N");
-        expectedElig.put("HOST_PLAN_OVERRIDE", "350");
-        expectedElig.put("MEME_TERMINATION_DATE", "2016-02-29");
+        expectedElig.put("MEME_TERMINATION_DATE", "2014-12-31");
         expectedElig.put("GENDER", "F");
-        expectedElig.put("SBSB_ID", "100000250");
-        expectedElig.put("ATTRIBUTION_PARN_IND", "N");
-        expectedElig.put("RELATIONSHIP_TO_SUBSCRIBER", "W");
-
-        List<TimeVector> expected = new ArrayList<TimeVector>();
-        expected.add(new TimeVector(new LocalDate(2016,2,1), new LocalDate(2016,2,29), expectedElig));
+        expectedElig.put("SBSB_ID", "100000300");
+        expectedElig.put("ATTRIBUTION_PARN_IND", "Y");
+        expectedElig.put("RELATIONSHIP_TO_SUBSCRIBER", "D");
 
         Assert.assertNotNull(timelines.get(TimelineContext.ELIGIBILITY));
 
-        Assert.assertTrue(testVectorList(expected, timelines.get(TimelineContext.ELIGIBILITY).getTimelineVectors()));
+        Assert.assertEquals(expectedElig, timelines.get(TimelineContext.ELIGIBILITY).get(new LocalDate(2014,9,1)));
+        Assert.assertEquals(expectedElig, timelines.get(TimelineContext.ELIGIBILITY).get(new LocalDate(2014,9,2)));
+        Assert.assertEquals(expectedElig, timelines.get(TimelineContext.ELIGIBILITY).get(new LocalDate(2014,12,31)));
+        Assert.assertEquals(expectedElig, timelines.get(TimelineContext.ELIGIBILITY).get(new LocalDate(2014,12,30)));
+        Assert.assertNotEquals(expectedElig, timelines.get(TimelineContext.ELIGIBILITY).get(new LocalDate(2014,8,31)));
+        Assert.assertNotEquals(expectedElig, timelines.get(TimelineContext.ELIGIBILITY).get(new LocalDate(2015,1,1)));
     }
 
-    private boolean testVectorList(List<TimeVector> left, List<TimeVector> right) {
-        if (left.size() != right.size()) {
-            return false;
-        }
-
-        boolean isPass = true;
-
-        for(int i = 0; i < left.size(); i++) {
-            isPass = isPass && ObjectUtils.equals(left.get(i), right.get(i));
-        }
-
-        return isPass;
-    }
 }

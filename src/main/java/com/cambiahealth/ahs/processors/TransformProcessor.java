@@ -31,7 +31,7 @@ public class TransformProcessor {
         String Member_Prefix = (null == data.get(BcbsaMbrPfxSfxXref.BCBSA_MBR_PFX)) ? "" : data.get(BcbsaMbrPfxSfxXref.BCBSA_MBR_PFX);
         String Member_Last_Name = (null == data.get(MemberHistory.MEME_LAST_NAME)) ? "" : data.get(MemberHistory.MEME_LAST_NAME);
         String Member_First_Name = (null == data.get(MemberHistory.MEME_FIRST_NAME)) ? "" : data.get(MemberHistory.MEME_FIRST_NAME);
-        String Member_Middle_Initial = (null != data.get(MemberHistory.EME_MID_INIT) && data.get(MemberHistory.EME_MID_INIT).length() > 0) ? data.get(MemberHistory.EME_MID_INIT) + "." : "";
+        String Member_Middle_Initial = (null != data.get(MemberHistory.MEME_MID_INIT) && data.get(MemberHistory.MEME_MID_INIT).length() > 0) ? data.get(MemberHistory.MEME_MID_INIT) + "." : "";
         String Member_Suffix = (null == data.get(BcbsaMbrPfxSfxXref.BCBSA_MBR_SFX)) ? "" : data.get(BcbsaMbrPfxSfxXref.BCBSA_MBR_SFX);
         String Member_Primary_Street_Address_1 = (null == data.get("")) ? "" : data.get("");//TODO: All address
         String Member_Primary_Street_address_2 = (null == data.get("")) ? "" : data.get("");
