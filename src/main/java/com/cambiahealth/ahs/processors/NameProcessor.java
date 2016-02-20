@@ -1,5 +1,6 @@
 package com.cambiahealth.ahs.processors;
 
+import com.cambiahealth.ahs.entity.BcbsaMbrPfxSfxXref;
 import com.cambiahealth.ahs.entity.MemberHistory;
 import com.cambiahealth.ahs.file.FileDescriptor;
 import com.cambiahealth.ahs.file.FlatFileReader;
@@ -20,9 +21,27 @@ import org.joda.time.LocalDate;
  */
 public class NameProcessor {
     private static FlatFileReader reader;
+    private static Map<String, Map<String, String>> fixes;
 
-    public static void initialize(IFlatFileResolver resolver) throws FileNotFoundException {
+    public static void initialize(IFlatFileResolver resolver) throws IOException {
         reader = resolver.getFile(FileDescriptor.MEMBER_HISTORY_EXTRACT);
+        FlatFileReader fixReader = resolver.getFile(FileDescriptor.BCBSA_MBR_PFX_SFX_XREF);
+
+        fixes = new HashMap<String, Map<String, String>>();
+
+        while(true){
+            Map<String, String> line;
+            line = fixReader.readColumn(); //TODO Create file
+            if(line == null){
+                break;
+            } else {
+                Map<String, String> lineData = new HashMap<String,String>();
+                lineData.put(BcbsaMbrPfxSfxXref.BCBSA_MBR_SFX.toString(),line.get(BcbsaMbrPfxSfxXref.BCBSA_MBR_SFX.toString()));
+                lineData.put(BcbsaMbrPfxSfxXref.BCBSA_MBR_PFX.toString(),line.get(BcbsaMbrPfxSfxXref.BCBSA_MBR_PFX.toString()));
+
+                fixes.put(line.get(BcbsaMbrPfxSfxXref.MEME_TITLE.toString()), lineData);
+            }
+        }
     }
 
     public static void processName(String MEME, Map<TimelineContext, Timeline>  timelines) throws IOException {
@@ -34,31 +53,39 @@ public class NameProcessor {
         while(true) {
             Map<String, String> line;
             line = reader.readColumn();
-
+            if(null != line) {
+                String key = line.get(MemberHistory.MEME_TITLE.toString());
+                if(null != key) {
+                    Map<String, String> values = fixes.get(key);
+                    if(null != values) {
+                        line.putAll(values);
+                    }
+                }
+            }
             if(line != null){
-                if (!StringUtils.equals(line.get(MemberHistory.MEME_CK), MEME)) {
+                if (!StringUtils.equals(line.get(MemberHistory.MEME_CK.toString()), MEME)) {
                     if (!storedLine.isEmpty()){
                         reader.unRead();
                         timeline.storeVector(storedStart, storedEnd, storedLine);
                         break;
-                    } else if(line.get(MemberHistory.MEME_CK).compareTo(MEME) > 0){
+                    } else if(line.get(MemberHistory.MEME_CK.toString()).compareTo(MEME) > 0){
                         break;
                     }
                 } else {
                     if(storedLine.isEmpty()) {
                         storedLine = new HashMap<String,String>(line);
-                        storedStart = new LocalDate(line.get(MemberHistory.MEME_EFF_DT));
-                        storedEnd = new LocalDate(line.get(MemberHistory.MEME_TERM_DT));
-                    } else if(!StringUtils.equals(line.get(MemberHistory.MEME_FIRST_NAME),storedLine.get(MemberHistory.MEME_FIRST_NAME)) ||
-                              !StringUtils.equals(line.get(MemberHistory.MEME_LAST_NAME),storedLine.get(MemberHistory.MEME_LAST_NAME))   ||
-                              !StringUtils.equals(line.get(MemberHistory.MEME_REL),storedLine.get(MemberHistory.MEME_REL))){
+                        storedStart = new LocalDate(line.get(MemberHistory.MEME_EFF_DT.toString()));
+                        storedEnd = new LocalDate(line.get(MemberHistory.MEME_TERM_DT.toString()));
+                    } else if(!StringUtils.equals(line.get(MemberHistory.MEME_FIRST_NAME.toString()),storedLine.get(MemberHistory.MEME_FIRST_NAME.toString())) ||
+                              !StringUtils.equals(line.get(MemberHistory.MEME_LAST_NAME.toString()),storedLine.get(MemberHistory.MEME_LAST_NAME.toString()))   ||
+                              !StringUtils.equals(line.get(MemberHistory.MEME_REL.toString()),storedLine.get(MemberHistory.MEME_REL.toString()))){
                         timeline.storeVector(storedStart, storedEnd, storedLine);
                         storedLine = new HashMap<String,String>(line);
-                        storedStart = new LocalDate(line.get(MemberHistory.MEME_EFF_DT));
-                        storedEnd = new LocalDate(line.get(MemberHistory.MEME_TERM_DT));
+                        storedStart = new LocalDate(line.get(MemberHistory.MEME_EFF_DT.toString()));
+                        storedEnd = new LocalDate(line.get(MemberHistory.MEME_TERM_DT.toString()));
                     } else{
                         storedLine = new HashMap<String,String>(line);
-                        storedEnd = new LocalDate(line.get(MemberHistory.MEME_TERM_DT));
+                        storedEnd = new LocalDate(line.get(MemberHistory.MEME_TERM_DT.toString()));
                     }
                 }
             } else {

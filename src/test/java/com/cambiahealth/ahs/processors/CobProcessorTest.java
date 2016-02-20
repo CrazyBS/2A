@@ -51,16 +51,12 @@ public class CobProcessorTest {
     public void testCobProcessing() throws IOException, ParseException, NoSuchFieldException, IllegalAccessException {
         Map<TimelineContext, Timeline> timelines = new HashMap<TimelineContext, Timeline>();
         CobProcessor.processCob("98848702", timelines);
-        List<TimeVector> expected = new ArrayList<TimeVector>();
         /*
             P|98848702|2015-04-01|9999-12-31
             M|98848702|2015-02-01|2015-05-31
          */
         Map<String, String> P = Collections.singletonMap(Cob.COB_VALUE.toString(),"P");
         Map<String, String> M = Collections.singletonMap(Cob.COB_VALUE.toString(),"M");
-
-        expected.add(new TimeVector(new LocalDate(2015,2,1), new LocalDate(2015,5,31), M));
-        expected.add(new TimeVector(new LocalDate(2015,6,1), new LocalDate(9999,12,31), P));
 
         Timeline timeline = timelines.get(TimelineContext.COB);
 
@@ -71,5 +67,29 @@ public class CobProcessorTest {
         Assert.assertEquals(timeline.get(new LocalDate(2015,2,1)), M);
         Assert.assertEquals(timeline.get(new LocalDate(9999,12,31)), P);
         Assert.assertEquals(timeline.get(new LocalDate(2015,4,30)), M);
+    }
+
+    @Test
+    public void testPreservationOfRows() throws IOException, ParseException {
+        Map<TimelineContext, Timeline> timelines = new HashMap<TimelineContext, Timeline>();
+        /*
+            P|98848000|1997-05-01|9999-12-31
+            P|98848050|2002-03-01|9999-12-31
+            P|98848051|2008-01-01|9999-12-31
+         */
+
+        CobProcessor.processCob("98848000", timelines);
+        Assert.assertNotNull(timelines.get(TimelineContext.COB));
+        Assert.assertFalse(timelines.get(TimelineContext.COB).isEmpty());
+        timelines.clear();
+
+        CobProcessor.processCob("98848050", timelines);
+        Assert.assertNotNull(timelines.get(TimelineContext.COB));
+        Assert.assertFalse(timelines.get(TimelineContext.COB).isEmpty());
+        timelines.clear();
+
+        CobProcessor.processCob("98848051", timelines);
+        Assert.assertNotNull(timelines.get(TimelineContext.COB));
+        Assert.assertFalse(timelines.get(TimelineContext.COB).isEmpty());
     }
 }

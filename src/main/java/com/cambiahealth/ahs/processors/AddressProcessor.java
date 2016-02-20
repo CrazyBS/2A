@@ -37,7 +37,7 @@ public class AddressProcessor {
             if(line == null){
                 break;
             } else {
-                zipCodes.add(line.get(ZipCode.ZIP_CODE));
+                zipCodes.add(line.get(ZipCode.ZIP_CODE.toString()));
             }
         }
 
@@ -58,14 +58,14 @@ public class AddressProcessor {
             line = confReader.readColumn();
 
             if (line != null) {
-                int rowTest = line.get(ConfidentialAddress.MEME_CK).compareTo(MEME);
+                int rowTest = line.get(ConfidentialAddress.MEME_CK.toString()).compareTo(MEME);
                 if (rowTest < 0) {
                     continue;
                 } else if(rowTest == 0) {
-                    if(zipCodes.contains(line.get(ConfidentialAddress.ENAD_ZIP))){
-                        rejectTimeline.storeVector(new LocalDate(line.get(ConfidentialAddress.PMCC_EFF_DT)), new LocalDate(line.get(ConfidentialAddress.PMCC_TERM_DTM)), line);
+                    if(zipCodes.contains(line.get(ConfidentialAddress.ENAD_ZIP.toString()))){
+                        confTimeline.storeVector(new LocalDate(line.get(ConfidentialAddress.PMCC_EFF_DT.toString())), new LocalDate(line.get(ConfidentialAddress.PMCC_TERM_DTM.toString())), line);
                     } else {
-                        confTimeline.storeVector(new LocalDate(line.get(ConfidentialAddress.PMCC_EFF_DT)), new LocalDate(line.get(ConfidentialAddress.PMCC_TERM_DTM)), line);
+                        rejectTimeline.storeVector(new LocalDate(line.get(ConfidentialAddress.PMCC_EFF_DT.toString())), new LocalDate(line.get(ConfidentialAddress.PMCC_TERM_DTM.toString())), line);
                     }
                 } else {
                     confReader.unRead();
@@ -81,13 +81,13 @@ public class AddressProcessor {
             line = subReader.readColumn();
 
             if (line != null) {
-                int rowTest = line.get(SubscriberAddress.MEME_CK).compareTo(MEME);
+                int rowTest = line.get(SubscriberAddress.MEME_CK.toString()).compareTo(MEME);
                 if (rowTest < 0) {
                     continue;
                 } else if(rowTest == 0) {
-                    subTimeline.storeVector(new LocalDate(line.get(SubscriberAddress.SBSB_EFF_DT)), new LocalDate(line.get(SubscriberAddress.SBSB_TERM_DT)), line);
-                    if (zipCodes.contains(line.get(SubscriberAddress.SBAD_ZIP))){
-                        rejectSubTimeline.storeVector(new LocalDate(line.get(SubscriberAddress.SBSB_EFF_DT)), new LocalDate(line.get(SubscriberAddress.SBSB_TERM_DT)), line);
+                    subTimeline.storeVector(new LocalDate(line.get(SubscriberAddress.SBSB_EFF_DT.toString())), new LocalDate(line.get(SubscriberAddress.SBSB_TERM_DT.toString())), line);
+                    if (!zipCodes.contains(line.get(SubscriberAddress.SBAD_ZIP.toString()))){
+                        rejectSubTimeline.storeVector(new LocalDate(line.get(SubscriberAddress.SBSB_EFF_DT.toString())), new LocalDate(line.get(SubscriberAddress.SBSB_TERM_DT.toString())), line);
                     }
                 } else {
                     subReader.unRead();

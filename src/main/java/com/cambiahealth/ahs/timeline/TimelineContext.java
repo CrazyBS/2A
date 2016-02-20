@@ -8,5 +8,6 @@ public enum TimelineContext {
     NAME,
     ADDRESS_PRIMARY,
     ADDRESS_SECONDARY,
-    ELIGIBILITY
+    ELIGIBILITY,
+    BCBSA_FIXES
 }

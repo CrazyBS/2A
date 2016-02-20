@@ -42,7 +42,7 @@ public class EligibilityProcessor {
         reader.close();
     }
 
-    public static Timeline processEligibiltiy(String ctgId, String meme, Map<TimelineContext, Timeline> timelines) throws IOException, ParseException {
+    public static Timeline processEligibiltiy(String meme, Map<TimelineContext, Timeline> timelines) throws IOException, ParseException {
         Timeline timeline = new Timeline();
 
         // We'll use buffers to make the logic easier to manage
@@ -51,11 +51,11 @@ public class EligibilityProcessor {
         List<Map<String, String>> cspiLines = new ArrayList<Map<String, String>>();
         List<Map<String, String>> confEmailPhoneList = new ArrayList<Map<String, String>>();
 
-        collectLines(acorsReader, ctgId, meme, AcorsEligibility.MEME_CK.toString(), acorsLines);
+        collectLines(acorsReader, meme, AcorsEligibility.MEME_CK.toString(), acorsLines);
 
         if(!acorsLines.isEmpty()) {
             // Scroll both reader to the current meme under test
-            collectLines(cspiReader, null, meme, CspiHistory.MEME_CK.toString(), cspiLines);
+            collectLines(cspiReader, meme, CspiHistory.MEME_CK.toString(), cspiLines);
 
             if(!cspiLines.isEmpty()) {
                 // Okay, now we have all of our data, let's try joining them together
@@ -75,7 +75,7 @@ public class EligibilityProcessor {
                             if(new Interval(cspiStart, cspiEnd).contains(acorStart)) {
                                 // We have a complete match!
                                 // Collect the rest of the data
-                                collectLines(confEmailPhoneReader, null, meme, ConfidentialEmailPhone.MEME_CK.toString(), confEmailPhoneList);
+                                collectLines(confEmailPhoneReader, meme, ConfidentialEmailPhone.MEME_CK.toString(), confEmailPhoneList);
                                 String plan = claimConfig.get(cspiLine.get(CspiHistory.CSPI_ITS_PREFIX.toString()));
 
                                 if(plan.isEmpty()) {
@@ -111,20 +111,18 @@ public class EligibilityProcessor {
 
         cspiReader.close();
         cspiReader = null;
+
+        confEmailPhoneReader.close();
+        confEmailPhoneReader = null;
     }
 
-    private static boolean collectLines(FlatFileReader reader, String ctgId, String meme, String memeColumnName, Collection<Map<String, String>> collection) throws IOException {
+    private static boolean collectLines(FlatFileReader reader, String meme, String memeColumnName, Collection<Map<String, String>> collection) throws IOException {
         Map<String, String> line;
         while(null != (line = reader.readColumn())) {
             int rowTest;
-            if(null != ctgId) {
-                String ctgIdLine = line.get(AcorsEligibility.CTG_ID.toString());
-                String memeCk = line.get(memeColumnName);
-                rowTest = (ctgId + meme).compareTo(ctgIdLine + memeCk);
-            } else {
-                String memeCk = line.get(memeColumnName);
-                rowTest = meme.compareTo(memeCk);
-            }
+
+            String memeCk = line.get(memeColumnName);
+            rowTest = meme.compareTo(memeCk);
 
             if (rowTest < 0) {
                 // We passed it!

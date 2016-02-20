@@ -49,11 +49,12 @@ public class EligibilityProcessorTest {
     @Test
     public void testEligibilityCase1() throws IOException, ParseException {
         Map<TimelineContext, Timeline> timelines = new HashMap<TimelineContext, Timeline>();
-        EligibilityProcessor.processEligibiltiy("995999996003366","136091253", timelines);
+        EligibilityProcessor.processEligibiltiy("136091253", timelines);
         Map<String, String> expectedElig = new HashMap<String, String>();
 
         // 995999996003366|136091253|2014-09-01|2014-12-31|MCUS1001|0001|F|D|1960-01-01|OMO12345|Y|N|
         // 136091253|MCUS1001|0001|2014-09-01 00:00:00|2014-12-31 00:00:00|PQL|100000300
+
         expectedElig.put("CTG_ID", "995999996003366");
         expectedElig.put("PRODUCT_ID", "OMO12345");
         expectedElig.put("MEME_CK", "136091253");
@@ -78,6 +79,29 @@ public class EligibilityProcessorTest {
         Assert.assertEquals(expectedElig, timelines.get(TimelineContext.ELIGIBILITY).get(new LocalDate(2014,12,30)));
         Assert.assertNotEquals(expectedElig, timelines.get(TimelineContext.ELIGIBILITY).get(new LocalDate(2014,8,31)));
         Assert.assertNotEquals(expectedElig, timelines.get(TimelineContext.ELIGIBILITY).get(new LocalDate(2015,1,1)));
+    }
+
+    @Test
+    public void testPreservationOfRows() throws IOException, ParseException {
+        Map<TimelineContext, Timeline> timelines = new HashMap<TimelineContext, Timeline>();
+        /*
+            105977752|105977752
+            995999996003365|136091254
+            995999996003366|136091253
+         */
+        EligibilityProcessor.processEligibiltiy("105977752", timelines);
+        Assert.assertNotNull(timelines.get(TimelineContext.ELIGIBILITY));
+        Assert.assertFalse(timelines.get(TimelineContext.ELIGIBILITY).isEmpty());
+        timelines.clear();
+
+        EligibilityProcessor.processEligibiltiy("136091253", timelines);
+        Assert.assertNotNull(timelines.get(TimelineContext.ELIGIBILITY));
+        Assert.assertFalse(timelines.get(TimelineContext.ELIGIBILITY).isEmpty());
+        timelines.clear();
+
+        EligibilityProcessor.processEligibiltiy("136091254", timelines);
+        Assert.assertNotNull(timelines.get(TimelineContext.ELIGIBILITY));
+        Assert.assertFalse(timelines.get(TimelineContext.ELIGIBILITY).isEmpty());
     }
 
 }
