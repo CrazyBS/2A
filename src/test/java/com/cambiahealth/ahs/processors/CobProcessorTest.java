@@ -11,6 +11,7 @@ import com.cambiahealth.ahs.timeline.TimelineContext;
 import org.apache.commons.lang3.ObjectUtils;
 import org.joda.time.LocalDate;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -55,29 +56,20 @@ public class CobProcessorTest {
             P|98848702|2015-04-01|9999-12-31
             M|98848702|2015-02-01|2015-05-31
          */
-        expected.add(new TimeVector(new LocalDate(2015,2,1), new LocalDate(2015,5,31), "M"));
-        expected.add(new TimeVector(new LocalDate(2015,6,1), new LocalDate(9999,12,31), "P"));
+        Map<String, String> P = Collections.singletonMap(Cob.COB_VALUE.toString(),"P");
+        Map<String, String> M = Collections.singletonMap(Cob.COB_VALUE.toString(),"M");
+
+        expected.add(new TimeVector(new LocalDate(2015,2,1), new LocalDate(2015,5,31), M));
+        expected.add(new TimeVector(new LocalDate(2015,6,1), new LocalDate(9999,12,31), P));
 
         Timeline timeline = timelines.get(TimelineContext.COB);
 
         assertTrue(null != timeline);
 
-        List<TimeVector> timelineList = timeline.getTimelineVectors();
-
-        assertTrue(testVectorList(timelineList, expected));
-    }
-
-    private boolean testVectorList(List<TimeVector> left, List<TimeVector> right) {
-        if (left.size() != right.size()) {
-            return false;
-        }
-
-        boolean isPass = true;
-
-        for(int i = 0; i < left.size(); i++) {
-            isPass = isPass && ObjectUtils.equals(left.get(i), right.get(i));
-        }
-
-        return isPass;
+        Assert.assertEquals(timeline.get(new LocalDate(2015,5,31)), M);
+        Assert.assertEquals(timeline.get(new LocalDate(2015,6,1)), P);
+        Assert.assertEquals(timeline.get(new LocalDate(2015,2,1)), M);
+        Assert.assertEquals(timeline.get(new LocalDate(9999,12,31)), P);
+        Assert.assertEquals(timeline.get(new LocalDate(2015,4,30)), M);
     }
 }

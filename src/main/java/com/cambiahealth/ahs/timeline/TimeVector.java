@@ -2,15 +2,17 @@ package com.cambiahealth.ahs.timeline;
 
 import org.joda.time.LocalDate;
 
+import java.util.Map;
+
 /**
  * Created by bpyl on 2/19/2016.
  */
 public class TimeVector {
     private LocalDate start;
     private LocalDate end;
-    private Object storedObject;
+    private Map<String, String> storedObject;
 
-    public TimeVector(LocalDate start, LocalDate end, Object storedObject) {
+    public TimeVector(LocalDate start, LocalDate end, Map<String, String> storedObject) {
         this.start = start;
         this.end = end;
         this.storedObject = storedObject;
@@ -53,11 +55,11 @@ public class TimeVector {
         this.end = end;
     }
 
-    public Object getStoredObject() {
+    public Map<String, String> getStoredObject() {
         return storedObject;
     }
 
-    public void setStoredObject(Object storedObject) {
+    public void setStoredObject(Map<String, String> storedObject) {
         this.storedObject = storedObject;
     }
 }

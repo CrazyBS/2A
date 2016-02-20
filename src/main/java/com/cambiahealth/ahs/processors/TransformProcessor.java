@@ -1,5 +1,6 @@
 package com.cambiahealth.ahs.processors;
 
+import com.cambiahealth.ahs.entity.*;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
@@ -13,39 +14,26 @@ public class TransformProcessor {
     public static Map<String,String> processTransformationForFile(LocalDate start, LocalDate end, Map<String,String> data){
         Map<String, String> transformedResult = new HashMap<String, String>();
 
-        String NDW_Plan_ID = (null == data.get("")) ? "" : processPlan(data.get(""));
-        String Home_Plan_Product_ID = (null == data.get("")) ? "" : data.get("").substring(0,14);
+        String NDW_Plan_ID = (null == data.get(ClaimsConfig.PLAN)) ? "" : processPlan(data.get(ClaimsConfig.PLAN));
+        String Home_Plan_Product_ID = (null == data.get(AcorsEligibility.PRODUCT_ID)) ? "" : data.get(AcorsEligibility.PRODUCT_ID).substring(0,14);
         String NDW_Product_Category_Code = "PPO";
-        String Member_ID = data.get("");
-        String Consistent_Member_ID = (null == data.get("")) ? "" : data.get("");
-        String Member_Date_of_Birth = (new LocalDate(data.get(""))).toString("yyyyMMdd");
-        String Member_Gender = (null == data.get("")) ? "U" : data.get("");
-        String Member_Confidentiality_Code = (data.get("").equals("Y")) ? "BLU" : (data.get("").equals("CONF")) ? "PHI" : "NON";
+        String Member_ID = data.get(CspiHistory.MEME_CK);
+        String Consistent_Member_ID = (null == data.get(AcorsEligibility.CTG_ID)) ? "" : data.get(AcorsEligibility.CTG_ID);
+        String Member_Date_of_Birth = (new LocalDate(data.get(AcorsEligibility.DOB))).toString("yyyyMMdd");
+        String Member_Gender = (null == data.get(AcorsEligibility.GENDER)) ? "U" : data.get(AcorsEligibility.GENDER);
+        String Member_Confidentiality_Code = (data.get(AcorsEligibility.MASK_IND).equals("Y")) ? "BLU" : (data.get("").equals("CONF")) ? "PHI" : "NON";//TODO
         String Coverage_Begin_Date = start.toString("yyyyMMdd");
         String Coverage_End_Date = end.toString("yyyyMMdd");
-        String Member_Relationship;
-
-        if(data.get("").equals("W") || data.get("").equals("H")){
-            Member_Relationship = "01";
-        } else if(data.get("").equals("M")){
-            Member_Relationship = "18";
-        } else if(data.get("").equals("S") || data.get("").equals("D")){
-            Member_Relationship = "19";
-        } else if(data.get("").equals("O")){
-            Member_Relationship = "G8";
-        } else {
-            Member_Relationship = "21";
-        }
-
-        String ITS_Subscriber_ID = data.get("") + data.get("");
+        String Member_Relationship = processRelationship(data.get(AcorsEligibility.RELATIONSHIP_TO_SUBSCRIBER));
+        String ITS_Subscriber_ID = data.get(CspiHistory.CSPI_ITS_PREFIX) + data.get(CspiHistory.SBSB_ID);
         String Group_or_Individual_Code = "GROUP";
-        String Alpha_Prefix = (null == data.get("")) ? "" : data.get("");
-        String Member_Prefix = (null == data.get("")) ? "" : data.get("");
-        String Member_Last_Name = (null == data.get("")) ? "" : data.get("");
-        String Member_First_Name = (null == data.get("")) ? "" : data.get("");
-        String Member_Middle_Initial = (null != data.get("") && data.get("").length() > 0) ? data.get("") + "." : "";
-        String Member_Suffix = (null == data.get("")) ? "" : data.get("");
-        String Member_Primary_Street_Address_1 = (null == data.get("")) ? "" : data.get("");
+        String Alpha_Prefix = (null == data.get(CspiHistory.CSPI_ITS_PREFIX)) ? "" : data.get(CspiHistory.CSPI_ITS_PREFIX);
+        String Member_Prefix = (null == data.get("")) ? "" : data.get("");//TODO
+        String Member_Last_Name = (null == data.get(MemberHistory.MEME_LAST_NAME)) ? "" : data.get(MemberHistory.MEME_LAST_NAME);
+        String Member_First_Name = (null == data.get(MemberHistory.MEME_FIRST_NAME)) ? "" : data.get(MemberHistory.MEME_FIRST_NAME);
+        String Member_Middle_Initial = (null != data.get(MemberHistory.EME_MID_INIT) && data.get(MemberHistory.EME_MID_INIT).length() > 0) ? data.get(MemberHistory.EME_MID_INIT) + "." : "";
+        String Member_Suffix = (null == data.get("")) ? "" : data.get("");//TODO
+        String Member_Primary_Street_Address_1 = (null == data.get("")) ? "" : data.get("");//TODO: All address
         String Member_Primary_Street_address_2 = (null == data.get("")) ? "" : data.get("");
         String Member_Primary_City = (null == data.get("")) ? "" : data.get("");
         String Member_Primary_State = (null == data.get("")) ? "" : data.get("");
@@ -59,9 +47,9 @@ public class TransformProcessor {
         String Member_Secondary_State = (null == data.get("")) ? "" : data.get("");
         String Member_Secondary_ZIP_Code = (null == data.get("")) ? "" : data.get("").substring(0,4);
         String Member_Secondary_ZIP_Code_4 = (null == data.get("")) ? "" : data.get("").substring(5,8);
-        String Host_Plan_Override = (null == data.get("")) ? "" : data.get("");
-        String Member_Participation_Code = (null == data.get("")) ? "N" : data.get("");
-        String Member_Medical_COB_Code = data.get("");
+        String Host_Plan_Override = (null == data.get(AcorsEligibility.HOST_PLAN_OVERRIDE)) ? "" : data.get(AcorsEligibility.HOST_PLAN_OVERRIDE);
+        String Member_Participation_Code = (null == data.get(AcorsEligibility.ATTRIBUTION_PARN_IND)) ? "N" : data.get(AcorsEligibility.ATTRIBUTION_PARN_IND);
+        String Member_Medical_COB_Code = data.get(Cob.COB_VALUE);
         String Void_Indicator = "N";
         String MMI_Indicator = "";
         String Host_Plan_Code = "";
@@ -116,24 +104,24 @@ public class TransformProcessor {
     public static Map<String,Object> processTransformationForOracle(LocalDate start, LocalDate end, Map<String,String> data){
         Map<String, Object> transformedResult = new HashMap<String, Object>();
 
-        long MBR_ID = Long.parseLong(data.get(""));
+        long MBR_ID = Long.parseLong(data.get(""));//TODO
         DateTime MBR_EFF_DT = new DateTime(start);
-        String HOME_PLN_MBR_ID = data.get("");
-        String BCBSA_CMI = (null == data.get("")) ? data.get("") : data.get("");
+        String HOME_PLN_MBR_ID = data.get(CspiHistory.MEME_CK);
+        String BCBSA_CMI = (null == data.get(AcorsEligibility.CTG_ID)) ? data.get(CspiHistory.MEME_CK) : data.get(AcorsEligibility.CTG_ID);
         String BCBSA_MMI = "";
-        String MBR_CONFDNTL_CD = (data.get("").equals("Y")) ? "BLU" : (data.get("").equals("CONF")) ? "PHI" : "NON";
+        String MBR_CONFDNTL_CD = (data.get(AcorsEligibility.MASK_IND).equals("Y")) ? "BLU" : (data.get("").equals("CONF")) ? "PHI" : "NON";//TODO
         String ALPH_PFX = data.get("");
-        String MBR_NAME_PFX = (null == data.get("")) ? "" : data.get("");
-        String MBR_NAME_SFX = (null == data.get("")) ? "" : data.get("");
+        String MBR_NAME_PFX = (null == data.get("")) ? "" : data.get("");//TODO
+        String MBR_NAME_SFX = (null == data.get("")) ? "" : data.get("");//TODO
         String VOID_IND = "N";
-        String NDW_HOME_PLN_CD = (null == data.get("")) ? "" : processPlan(data.get(""));
+        String NDW_HOME_PLN_CD = (null == data.get(ClaimsConfig.PLAN)) ? "" : processPlan(data.get(ClaimsConfig.PLAN));
         String NDW_HOST_PLN_CD = "";
-        String NDW_HOST_PLN_OVRRD_CD = (null == data.get("")) ? "" : data.get("");
+        String NDW_HOST_PLN_OVRRD_CD = (null == data.get(AcorsEligibility.HOST_PLAN_OVERRIDE)) ? "" : data.get(AcorsEligibility.HOST_PLAN_OVERRIDE);
         String NDW_HOME_PLN_CORP_PLN_CD = "";
         String NDW_HOST_PLN_CORP_PLN_CD = "";
         String NDW_PROD_CAT_CD = "PPO";
         String GRP_OR_INDIVL_CNTRCT_CD = "GROUP";
-        String MBR_MED_COB_CD = data.get("");
+        String MBR_MED_COB_CD = data.get(Cob.COB_VALUE);
 
 
         transformedResult.put("MBR_ID",MBR_ID);
@@ -174,5 +162,23 @@ public class TransformProcessor {
         }
         
         return plan;
+    }
+
+    private static String processRelationship(String relationshipToProcess){
+        String Member_Relationship;
+
+        if(relationshipToProcess.equals("W") || relationshipToProcess.equals("H")){
+            Member_Relationship = "01";
+        } else if(relationshipToProcess.equals("M")){
+            Member_Relationship = "18";
+        } else if(relationshipToProcess.equals("S") || relationshipToProcess.equals("D")){
+            Member_Relationship = "19";
+        } else if(relationshipToProcess.equals("O")){
+            Member_Relationship = "G8";
+        } else {
+            Member_Relationship = "21";
+        }
+
+        return Member_Relationship;
     }
 }
