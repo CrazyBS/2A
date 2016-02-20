@@ -114,7 +114,6 @@ public class Main {
         FlatFileReader reader = resolver.getFile(FileDescriptor.ACORS_ELIGIBILITY_EXTRACT);
         BufferedWriter writer = resolver.writeFile(FileDescriptor.FINAL_2A_OUTPUT);
 
-        String ctgId = null;
         String memeCk = null;
         Map<String, String> currentLine = null;
 
@@ -123,7 +122,6 @@ public class Main {
         // Walk through AcorsEligibility
         while(null != (currentLine = reader.readColumn())) {
             Map<TimelineContext, Timeline> timelines = new HashMap<TimelineContext, Timeline>();
-            String lineCtgId = currentLine.get(AcorsEligibility.CTG_ID.toString());
             String lineMemeCk = currentLine.get(AcorsEligibility.MEME_CK.toString());
 
             // If MEME has changed, then process new row
@@ -132,19 +130,12 @@ public class Main {
                continue;
             }
 
-            // If CTG has changed and there is rows to output,
-            // process COB then output row
-            if(!StringUtils.equals(lineCtgId, ctgId) && !rawRows.isEmpty()) {
-                ouputAllRows(writer, rawRows);
-                rawRows.clear();
-            }
 
             // Start the next row
-            ctgId = lineCtgId;
             memeCk = lineMemeCk;
 
-            if(processMeme(lineCtgId, lineMemeCk, timelines)) {
-                rawRows.addLast(timelines);
+            if(processMeme(lineMemeCk, timelines)) {
+                outputRowTo2A(writer, timelines);
             }
         }
 
@@ -153,7 +144,7 @@ public class Main {
         rawRows.clear();
     }
 
-    private static boolean processMeme(String ctgId, String meme, Map<TimelineContext, Timeline>  timelines) throws IOException, ParseException {
+    private static boolean processMeme(String meme, Map<TimelineContext, Timeline>  timelines) throws IOException, ParseException {
         // Address process()
         Timeline address = AddressProcessor.processAddress(meme, timelines);
         if(address.isEmpty()) {
@@ -161,7 +152,7 @@ public class Main {
         }
 
         // Eligibility process()
-        Timeline elig = EligibilityProcessor.processEligibiltiy(ctgId, meme, timelines);
+        Timeline elig = EligibilityProcessor.processEligibiltiy(meme, timelines);
         if(elig.isEmpty()) {
             return false;
         }
