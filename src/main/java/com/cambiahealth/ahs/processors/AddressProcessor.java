@@ -14,6 +14,9 @@ import org.joda.time.LocalDate;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 /**
@@ -24,6 +27,8 @@ public class AddressProcessor {
     private static FlatFileReader subReader;
     private static FlatFileReader zipReader;
     private static Set<String> zipCodes;
+
+    private static DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 
     public static void initialize(IFlatFileResolver resolver) throws IOException {
         confReader = resolver.getFile(FileDescriptor.CONFIDENTIAL_ADDRESS_EXTRACT);
@@ -45,11 +50,13 @@ public class AddressProcessor {
         zipReader = null;
     }
 
-    public static Timeline processAddress(String MEME, Map<TimelineContext, Timeline> timelines) throws IOException {
+    public static Timeline processAddress(String MEME, Map<TimelineContext, Timeline> timelines) throws IOException, ParseException {
         Timeline confTimeline = new Timeline();
-        Timeline subTimeline = new Timeline();
+        Timeline homeTimeline = new Timeline();
+        Timeline mailTimeline = new Timeline();
         Timeline rejectTimeline = new Timeline();
-        Timeline rejectSubTimeline = new Timeline();
+        Timeline rejectMailTimeline = new Timeline();
+        Timeline rejectHomeTimeline = new Timeline();
         Timeline primaryTimeline = new Timeline();
         Timeline secondaryTimeline = new Timeline();
 
@@ -62,10 +69,10 @@ public class AddressProcessor {
                 if (rowTest < 0) {
                     continue;
                 } else if(rowTest == 0) {
-                    if(zipCodes.contains(line.get(ConfidentialAddress.ENAD_ZIP.toString()))){
-                        confTimeline.storeVector(new LocalDate(line.get(ConfidentialAddress.PMCC_EFF_DT.toString())), new LocalDate(line.get(ConfidentialAddress.PMCC_TERM_DTM.toString())), line);
+                    if(!line.get(ConfidentialAddress.ENAD_STATE.toString()).equals("WA") || (line.get(ConfidentialAddress.ENAD_STATE.toString()).equals("WA") && zipCodes.contains(line.get(ConfidentialAddress.ENAD_ZIP.toString())))){
+                        confTimeline.storeVector(new LocalDate(format.parse(line.get(ConfidentialAddress.PMCC_EFF_DT.toString()))), new LocalDate(format.parse(line.get(ConfidentialAddress.PMCC_TERM_DTM.toString()))), line);
                     } else {
-                        rejectTimeline.storeVector(new LocalDate(line.get(ConfidentialAddress.PMCC_EFF_DT.toString())), new LocalDate(line.get(ConfidentialAddress.PMCC_TERM_DTM.toString())), line);
+                        rejectTimeline.storeVector(new LocalDate(format.parse(line.get(ConfidentialAddress.PMCC_EFF_DT.toString()))), new LocalDate(format.parse(line.get(ConfidentialAddress.PMCC_TERM_DTM.toString()))), line);
                     }
                 } else {
                     confReader.unRead();
@@ -85,9 +92,16 @@ public class AddressProcessor {
                 if (rowTest < 0) {
                     continue;
                 } else if(rowTest == 0) {
-                    subTimeline.storeVector(new LocalDate(line.get(SubscriberAddress.SBSB_EFF_DT.toString())), new LocalDate(line.get(SubscriberAddress.SBSB_TERM_DT.toString())), line);
-                    if (!zipCodes.contains(line.get(SubscriberAddress.SBAD_ZIP.toString()))){
-                        rejectSubTimeline.storeVector(new LocalDate(line.get(SubscriberAddress.SBSB_EFF_DT.toString())), new LocalDate(line.get(SubscriberAddress.SBSB_TERM_DT.toString())), line);
+                    if(line.get(SubscriberAddress.SBAD_TYPE.toString()).equals("H")){
+                        homeTimeline.storeVector(new LocalDate(format.parse(line.get(SubscriberAddress.SBSB_EFF_DT.toString()))), new LocalDate(format.parse(line.get(SubscriberAddress.SBSB_TERM_DT.toString()))), line);
+                        if(!line.get(SubscriberAddress.SBAD_STATE.toString()).equals("WA") || (line.get(SubscriberAddress.SBAD_STATE.toString()).equals("WA") && zipCodes.contains(line.get(SubscriberAddress.SBAD_ZIP.toString())))){
+                            rejectHomeTimeline.storeVector(new LocalDate(format.parse(line.get(SubscriberAddress.SBSB_EFF_DT.toString()))), new LocalDate(format.parse(line.get(SubscriberAddress.SBSB_TERM_DT.toString()))), line);
+                        }
+                    } else if(line.get(SubscriberAddress.SBAD_TYPE.toString()).equals("M")){
+                        mailTimeline.storeVector(new LocalDate(format.parse(line.get(SubscriberAddress.SBSB_EFF_DT.toString()))), new LocalDate(format.parse(line.get(SubscriberAddress.SBSB_TERM_DT.toString()))), line);
+                        if(!line.get(SubscriberAddress.SBAD_STATE.toString()).equals("WA") || (line.get(SubscriberAddress.SBAD_STATE.toString()).equals("WA") && zipCodes.contains(line.get(SubscriberAddress.SBAD_ZIP.toString())))){
+                            rejectMailTimeline.storeVector(new LocalDate(format.parse(line.get(SubscriberAddress.SBSB_EFF_DT.toString()))), new LocalDate(format.parse(line.get(SubscriberAddress.SBSB_TERM_DT.toString()))), line);
+                        }
                     }
                 } else {
                     subReader.unRead();
@@ -98,15 +112,30 @@ public class AddressProcessor {
             }
         }
 
-        subTimeline.removeAll(rejectTimeline);
+        homeTimeline.removeAll(rejectTimeline);
+        mailTimeline.removeAll(rejectTimeline);
 
-        primaryTimeline.addAll(subTimeline);
-        primaryTimeline.removeAll(rejectSubTimeline);
+        Timeline primaryHome = new Timeline();
+        primaryHome.addAll(homeTimeline);
+        primaryHome.removeAll(rejectHomeTimeline);
+
+        Timeline primaryMail = new Timeline();
+        primaryMail.addAll(mailTimeline);
+        primaryMail.removeAll(rejectMailTimeline);
+
+        primaryTimeline.addAll(primaryMail);
+        primaryTimeline.addAll(primaryHome);
         primaryTimeline.addAll(confTimeline);
 
-        secondaryTimeline.addAll(subTimeline);
-        subTimeline.removeAll(confTimeline);
-        secondaryTimeline.removeAll(subTimeline);
+        secondaryTimeline.addAll(mailTimeline);
+
+        Timeline primaryNotMail = new Timeline();
+        primaryNotMail.addAll(primaryHome);
+        primaryNotMail.addAll(confTimeline);
+
+        mailTimeline.removeAll(primaryNotMail);
+
+        secondaryTimeline.removeAll(mailTimeline);
 
         timelines.put(TimelineContext.ADDRESS_PRIMARY, primaryTimeline);
         timelines.put(TimelineContext.ADDRESS_SECONDARY, secondaryTimeline);

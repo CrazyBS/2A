@@ -21,10 +21,10 @@ public class TransformProcessor {
         String Consistent_Member_ID = (null == data.get(AcorsEligibility.CTG_ID.toString())) ? "" : data.get(AcorsEligibility.CTG_ID.toString());
         String Member_Date_of_Birth = (new LocalDate(data.get(AcorsEligibility.DOB.toString()))).toString("yyyyMMdd");
         String Member_Gender = (null == data.get(AcorsEligibility.GENDER.toString())) ? "U" : data.get(AcorsEligibility.GENDER.toString());
-        String Member_Confidentiality_Code = (data.get(AcorsEligibility.MASK_IND.toString()).equals("Y")) ? "BLU" : (data.get("").equals("CONF")) ? "PHI" : "NON";//TODO Address type
+        String Member_Confidentiality_Code ="";// (data.get(AcorsEligibility.MASK_IND.toString()).equals("Y")) ? "BLU" : (data.get("").equals("CONF")) ? "PHI" : "NON";//TODO Address type
         String Coverage_Begin_Date = start.toString("yyyyMMdd");
         String Coverage_End_Date = end.toString("yyyyMMdd");
-        String Member_Relationship = processRelationship(data.get(AcorsEligibility.RELATIONSHIP_TO_SUBSCRIBER.toString()));
+        String Member_Relationship = processRelationship((null == data.get(AcorsEligibility.RELATIONSHIP_TO_SUBSCRIBER.toString())) ? "" : data.get(AcorsEligibility.RELATIONSHIP_TO_SUBSCRIBER.toString()));
         String ITS_Subscriber_ID = data.get(CspiHistory.CSPI_ITS_PREFIX.toString()) + data.get(CspiHistory.SBSB_ID.toString());
         String Group_or_Individual_Code = "GROUP";
         String Alpha_Prefix = (null == data.get(CspiHistory.CSPI_ITS_PREFIX.toString())) ? "" : data.get(CspiHistory.CSPI_ITS_PREFIX.toString());
@@ -33,20 +33,20 @@ public class TransformProcessor {
         String Member_First_Name = (null == data.get(MemberHistory.MEME_FIRST_NAME.toString())) ? "" : data.get(MemberHistory.MEME_FIRST_NAME.toString());
         String Member_Middle_Initial = (null != data.get(MemberHistory.MEME_MID_INIT.toString()) && data.get(MemberHistory.MEME_MID_INIT.toString()).length() > 0) ? data.get(MemberHistory.MEME_MID_INIT.toString()) + "." : "";
         String Member_Suffix = (null == data.get(BcbsaMbrPfxSfxXref.BCBSA_MBR_SFX.toString())) ? "" : data.get(BcbsaMbrPfxSfxXref.BCBSA_MBR_SFX.toString());
-        String Member_Primary_Street_Address_1 = (null == data.get("")) ? "" : data.get("");//TODO: All address
-        String Member_Primary_Street_address_2 = (null == data.get("")) ? "" : data.get("");
-        String Member_Primary_City = (null == data.get("")) ? "" : data.get("");
-        String Member_Primary_State = (null == data.get("")) ? "" : data.get("");
-        String Member_Primary_ZIP_Code = (null == data.get("")) ? "" : data.get("").substring(0,4);
-        String Member_Primary_ZIP_Code_4 = (null != data.get("") && data.get("").length() > 5) ? data.get("").substring(5,8) : "0000";
-        String Member_Primary_Phone_Number = (null == data.get("")) ? "0000000000" : data.get("");
-        String Member_Primary_Email_Address = (null != data.get("") && !data.get("").equals("\n")) ? data.get(""): "";
-        String Member_Secondary_Street_Address_1 = (null == data.get("")) ? "" : data.get("");
-        String Member_Secondary_Street_Address_2 = (null == data.get("")) ? "" : data.get("");
-        String Member_Secondary_City = (null == data.get("")) ? "" : data.get("");
-        String Member_Secondary_State = (null == data.get("")) ? "" : data.get("");
-        String Member_Secondary_ZIP_Code = (null == data.get("")) ? "" : data.get("").substring(0,4);
-        String Member_Secondary_ZIP_Code_4 = (null == data.get("")) ? "" : data.get("").substring(5,8);
+        String Member_Primary_Street_Address_1 ="";// (null == data.get("")) ? "" : data.get("");//TODO: All address
+        String Member_Primary_Street_address_2 ="";// (null == data.get("")) ? "" : data.get("");
+        String Member_Primary_City ="";// (null == data.get("")) ? "" : data.get("");
+        String Member_Primary_State ="";// (null == data.get("")) ? "" : data.get("");
+        String Member_Primary_ZIP_Code ="";// (null == data.get("")) ? "" : data.get("").substring(0,4);
+        String Member_Primary_ZIP_Code_4 ="";// (null != data.get("") && data.get("").length() > 5) ? data.get("").substring(5,8) : "0000";
+        String Member_Primary_Phone_Number ="";// (null == data.get("")) ? "0000000000" : data.get("");
+        String Member_Primary_Email_Address ="";// (null != data.get("") && !data.get("").equals("\n")) ? data.get(""): "";
+        String Member_Secondary_Street_Address_1 ="";// (null == data.get("")) ? "" : data.get("");
+        String Member_Secondary_Street_Address_2 ="";// (null == data.get("")) ? "" : data.get("");
+        String Member_Secondary_City ="";// (null == data.get("")) ? "" : data.get("");
+        String Member_Secondary_State = "";// (null == data.get("")) ? "" : data.get("");
+        String Member_Secondary_ZIP_Code ="";// (null == data.get("")) ? "" : data.get("").substring(0,4);
+        String Member_Secondary_ZIP_Code_4 ="";// (null == data.get("")) ? "" : data.get("").substring(5,8);
         String Host_Plan_Override = (null == data.get(AcorsEligibility.HOST_PLAN_OVERRIDE.toString())) ? "" : data.get(AcorsEligibility.HOST_PLAN_OVERRIDE.toString());
         String Member_Participation_Code = (null == data.get(AcorsEligibility.ATTRIBUTION_PARN_IND.toString())) ? "N" : data.get(AcorsEligibility.ATTRIBUTION_PARN_IND.toString());
         String Member_Medical_COB_Code = data.get(Cob.COB_VALUE.toString());
@@ -109,12 +109,12 @@ public class TransformProcessor {
         String HOME_PLN_MBR_ID = data.get(CspiHistory.MEME_CK.toString());
         String BCBSA_CMI = (null == data.get(AcorsEligibility.CTG_ID.toString())) ? data.get(CspiHistory.MEME_CK.toString()) : data.get(AcorsEligibility.CTG_ID.toString());
         String BCBSA_MMI = "";
-        String MBR_CONFDNTL_CD = (data.get(AcorsEligibility.MASK_IND.toString()).equals("Y")) ? "BLU" : (data.get("").equals("CONF")) ? "PHI" : "NON";//TODO Address type
+        String MBR_CONFDNTL_CD ="";// (data.get(AcorsEligibility.MASK_IND.toString()).equals("Y")) ? "BLU" : (data.get("").equals("CONF")) ? "PHI" : "NON";//TODO Address type
         String ALPH_PFX = data.get("");
         String MBR_NAME_PFX = (null == data.get(BcbsaMbrPfxSfxXref.BCBSA_MBR_PFX.toString())) ? "" : data.get(BcbsaMbrPfxSfxXref.BCBSA_MBR_PFX.toString());
         String MBR_NAME_SFX = (null == data.get(BcbsaMbrPfxSfxXref.BCBSA_MBR_SFX.toString())) ? "" : data.get("");
         String VOID_IND = "N";
-        String NDW_HOME_PLN_CD = (null == data.get(ClaimsConfig.PLAN.toString())) ? "" : processPlan(data.get(ClaimsConfig.PLAN));
+        String NDW_HOME_PLN_CD = (null == data.get(ClaimsConfig.PLAN.toString())) ? "" : processPlan(data.get(ClaimsConfig.PLAN.toString()));
         String NDW_HOST_PLN_CD = "";
         String NDW_HOST_PLN_OVRRD_CD = (null == data.get(AcorsEligibility.HOST_PLAN_OVERRIDE.toString())) ? "" : data.get(AcorsEligibility.HOST_PLAN_OVERRIDE.toString());
         String NDW_HOME_PLN_CORP_PLN_CD = "";
