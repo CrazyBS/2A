@@ -3,6 +3,7 @@ package com.cambiahealth.ahs.file;
 import com.cambiahealth.ahs.entity.Column;
 
 import java.io.BufferedWriter;
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -11,8 +12,12 @@ import java.util.Map;
  */
 public class FlatFileWriter {
 
-    public static void writeLine(LinkedHashMap<String,Column> data, BufferedWriter writer){
+    public static void writeLine(LinkedHashMap<String,Column> data, BufferedWriter writer) throws IOException {
+        String line = generateLine(data);
 
+        writer.write(line);
+        writer.newLine();
+        writer.flush();
     }
 
     public static String generateLine(LinkedHashMap<String,Column> data){
