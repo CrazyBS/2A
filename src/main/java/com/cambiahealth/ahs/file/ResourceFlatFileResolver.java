@@ -8,6 +8,7 @@ import java.util.Map;
  */
 public class ResourceFlatFileResolver implements IFlatFileResolver {
     private Map<FileDescriptor, String> descriptors;
+    ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
     public ResourceFlatFileResolver(Map<FileDescriptor, String> descriptors) {
         this.descriptors = descriptors;
@@ -19,10 +20,14 @@ public class ResourceFlatFileResolver implements IFlatFileResolver {
 
     public BufferedWriter writeFile(FileDescriptor descriptor) throws IOException {
         // TODO:  How do we handle this for test!!
-        return new BufferedWriter(new OutputStreamWriter(null));
+        return new BufferedWriter(new OutputStreamWriter(bos));
     }
 
     public Map<FileDescriptor, String> getDescriptors() {
         return descriptors;
+    }
+
+    public ByteArrayOutputStream getBos() {
+        return bos;
     }
 }

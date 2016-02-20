@@ -56,7 +56,7 @@ public class Main {
         System.out.println("I'm a java JAR!");
     }
 
-    private static void create2A(IFlatFileResolver resolver) throws IOException, ParseException {
+    public static void create2A(IFlatFileResolver resolver) throws IOException, ParseException {
         initializeProcessors(resolver);
 
         beginProcessing(resolver);
@@ -98,8 +98,6 @@ public class Main {
 
         String memeCk = null;
         Map<String, String> currentLine = null;
-
-        Deque<Map<TimelineContext, Timeline>> rawRows = new ArrayDeque<Map<TimelineContext, Timeline>>();
 
         // Walk through AcorsEligibility
         while(null != (currentLine = reader.readColumn())) {
