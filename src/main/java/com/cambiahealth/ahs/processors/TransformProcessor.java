@@ -1,10 +1,10 @@
 package com.cambiahealth.ahs.processors;
 
+import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.jar.Pack200;
 
 /**
  * Created by msnook on 2/19/2016.
@@ -13,24 +13,7 @@ public class TransformProcessor {
     public static Map<String,String> processTransformationForFile(LocalDate start, LocalDate end, Map<String,String> data){
         Map<String, String> transformedResult = new HashMap<String, String>();
 
-        String NDW_Plan_ID;
-
-        if(data.get("") != null) {
-            if(data.get("").equals("611")){
-                NDW_Plan_ID = "611";
-            } else if(data.get("").equals("350") || data.get("").equals("351") || data.get("").equals("850") || data.get("").equals("851") || data.get("").equals("852")){
-                NDW_Plan_ID = "850";
-            } else if(data.get("").equals("410") || data.get("").equals("910")){
-                NDW_Plan_ID = "410";
-            } else if(data.get("").equals("932") || data.get("").equals("933") || data.get("").equals("937") || data.get("").equals("938")){
-                NDW_Plan_ID = "932";
-            } else {
-                NDW_Plan_ID = data.get("");
-            }
-        } else {
-            NDW_Plan_ID = data.get("");
-        }
-
+        String NDW_Plan_ID = (null == data.get("")) ? "" : processPlan(data.get(""));
         String Home_Plan_Product_ID = (null == data.get("")) ? "" : data.get("").substring(0,14);
         String NDW_Product_Category_Code = "PPO";
         String Member_ID = data.get("");
@@ -126,43 +109,26 @@ public class TransformProcessor {
         transformedResult.put("Host_Plan_Code",Host_Plan_Code);
         transformedResult.put("Home_Plan_Corporate_Plan_Code",Home_Plan_Corporate_Plan_Code);
         transformedResult.put("Pharmacy_Carve_Out_Indicator",Pharmacy_Carve_Out_Indicator);
-        
+
         return transformedResult;
     }
 
-    public static Map<String,String> processTransformationForOracle(LocalDate start, LocalDate end, Map<String,String> data){
-        Map<String, String> transformedResult = new HashMap<String, String>();
+    public static Map<String,Object> processTransformationForOracle(LocalDate start, LocalDate end, Map<String,String> data){
+        Map<String, Object> transformedResult = new HashMap<String, Object>();
 
-        String MBR_ID = data.get("");
-        String MBR_EFF_DT = data.get("");
+        long MBR_ID = Long.parseLong(data.get(""));
+        DateTime MBR_EFF_DT = new DateTime(start);
         String HOME_PLN_MBR_ID = data.get("");
         String BCBSA_CMI = (null == data.get("")) ? data.get("") : data.get("");
         String BCBSA_MMI = "";
-        String MBR_CONFDNTL_CD = (data.get("").equals("Y")) ? "BLU" : (data.get("").equals("CONF")) ? "PHI" : "NON";;
+        String MBR_CONFDNTL_CD = (data.get("").equals("Y")) ? "BLU" : (data.get("").equals("CONF")) ? "PHI" : "NON";
         String ALPH_PFX = data.get("");
         String MBR_NAME_PFX = (null == data.get("")) ? "" : data.get("");
         String MBR_NAME_SFX = (null == data.get("")) ? "" : data.get("");
         String VOID_IND = "N";
-        String NDW_HOME_PLN_CD;
-
-        if(data.get("") != null) {
-            if(data.get("").equals("611")){
-                NDW_HOME_PLN_CD = "611";
-            } else if(data.get("").equals("350") || data.get("").equals("351") || data.get("").equals("850") || data.get("").equals("851") || data.get("").equals("852")){
-                NDW_HOME_PLN_CD = "850";
-            } else if(data.get("").equals("410") || data.get("").equals("910")){
-                NDW_HOME_PLN_CD = "410";
-            } else if(data.get("").equals("932") || data.get("").equals("933") || data.get("").equals("937") || data.get("").equals("938")){
-                NDW_HOME_PLN_CD = "932";
-            } else {
-                NDW_HOME_PLN_CD = data.get("");
-            }
-        } else {
-            NDW_HOME_PLN_CD = data.get("");
-        }
-
+        String NDW_HOME_PLN_CD = (null == data.get("")) ? "" : processPlan(data.get(""));
         String NDW_HOST_PLN_CD = "";
-        String NDW_HOST_PLN_OVRRD_CD = (null == data.get("")) ? "" : data.get("");;
+        String NDW_HOST_PLN_OVRRD_CD = (null == data.get("")) ? "" : data.get("");
         String NDW_HOME_PLN_CORP_PLN_CD = "";
         String NDW_HOST_PLN_CORP_PLN_CD = "";
         String NDW_PROD_CAT_CD = "PPO";
@@ -190,5 +156,23 @@ public class TransformProcessor {
         transformedResult.put("MBR_MED_COB_CD",MBR_MED_COB_CD);
 
         return transformedResult;
+    }
+
+    private static String processPlan(String planToProcess) {
+        String plan;
+
+        if(planToProcess.equals("611")){
+            plan = "611";
+        } else if(planToProcess.equals("350") || planToProcess.equals("351") || planToProcess.equals("850") || planToProcess.equals("851") || planToProcess.equals("852")){
+            plan = "850";
+        } else if(planToProcess.equals("410") || planToProcess.equals("910")){
+            plan = "410";
+        } else if(planToProcess.equals("932") || planToProcess.equals("933") || planToProcess.equals("937") || planToProcess.equals("938")){
+            plan = "932";
+        } else {
+            plan = planToProcess;
+        }
+        
+        return plan;
     }
 }

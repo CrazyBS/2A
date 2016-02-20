@@ -2,7 +2,6 @@ package com.cambiahealth.ahs.timeline;
 
 import org.joda.time.Days;
 import org.joda.time.LocalDate;
-import org.joda.time.LocalTime;
 
 import java.util.*;
 
@@ -32,8 +31,26 @@ public class Timeline {
             timeline.add(newVector);
         } else if (!timeline.isEmpty()){
             ListIterator<TimeVector> iter = timeline.listIterator();
+            boolean isInserted = false;
             while(iter.hasNext()) {
                 TimeVector vector = iter.next();
+
+                // Decide if we are inserting in this row or not
+                // At this point, we know fell through this level.  So we are likely at
+                // our insertion point.
+                // null != data  (false)
+                // (past the time or no more lines) and not inserted (true)
+                if(null != data && !isInserted) {
+                    if(vector.getStart().isAfter(startTime)) {
+                        iter.previous();
+                        iter.add(newVector);
+                        iter.next();
+                        isInserted = true;
+                    } else if (!iter.hasNext()) {
+                        iter.add(newVector);
+                        isInserted = true;
+                    }
+                }
 
                 // Skip any vector that is not overlapping our new one
                 if(vector.getEnd().isBefore(startTime)) {
@@ -53,14 +70,6 @@ public class Timeline {
                         && (vector.getEnd().isAfter(startTime) || vector.getEnd().isEqual(startTime))) {
                     vector.setEnd(startTime.minus(Days.days(1)));
                     continue;
-                }
-
-                // At this point, we know fell through this level.  So we are likely at
-                // our insertion point.
-                if(null != data) {
-                    iter.previous();
-                    iter.add(newVector);
-                    iter.next();
                 }
 
                 // Delete any vector that is contained within our new one
@@ -120,39 +129,7 @@ public class Timeline {
         }
     }
 
-    private class TimeVector {
-        private LocalDate start;
-        private LocalDate end;
-        private Map<String,String> storedObject;
-
-        public TimeVector(LocalDate start, LocalDate end, Map<String,String> storedObject) {
-            this.start = start;
-            this.end = end;
-            this.storedObject = storedObject;
-        }
-
-        public LocalDate getStart() {
-            return start;
-        }
-
-        public void setStart(LocalDate start) {
-            this.start = start;
-        }
-
-        public LocalDate getEnd() {
-            return end;
-        }
-
-        public void setEnd(LocalDate end) {
-            this.end = end;
-        }
-
-        public Map<String,String> getStoredObject() {
-            return storedObject;
-        }
-
-        public void setStoredObject(Map<String,String> storedObject) {
-            this.storedObject = storedObject;
-        }
+    public List<TimeVector> getTimelineVectors() {
+        return timeline;
     }
 }
