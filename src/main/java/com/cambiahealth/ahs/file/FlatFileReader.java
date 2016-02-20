@@ -40,7 +40,7 @@ public class FlatFileReader {
         List<String> columnNames = descriptor.getSchema();
         HashMap<String, String> rowData = new HashMap<String, String>(columnNames.size());
 
-        String[] columns = StringUtils.split(line + " ", "|");
+        String[] columns = StringUtils.splitByWholeSeparatorPreserveAllTokens(line + " ", "|");
         if(columnNames.size() != columns.length) {
             throw new RuntimeException("The number of columns in the file: " +
                     columns.length + " does not match the columns in the descriptor: " +

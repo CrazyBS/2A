@@ -36,29 +36,29 @@ public class NameProcessor {
             line = reader.readColumn();
 
             if(line != null){
-                if (!StringUtils.equals(line.get(MemberHistory.MEME_CK), MEME)) {
+                if (!StringUtils.equals(line.get(MemberHistory.MEME_CK.toString()), MEME)) {
                     if (!storedLine.isEmpty()){
                         reader.unRead();
                         timeline.storeVector(storedStart, storedEnd, storedLine);
                         break;
-                    } else if(line.get(MemberHistory.MEME_CK).compareTo(MEME) > 0){
+                    } else if(line.get(MemberHistory.MEME_CK.toString()).compareTo(MEME) > 0){
                         break;
                     }
                 } else {
                     if(storedLine.isEmpty()) {
                         storedLine = new HashMap<String,String>(line);
-                        storedStart = new LocalDate(line.get(MemberHistory.MEME_EFF_DT));
-                        storedEnd = new LocalDate(line.get(MemberHistory.MEME_TERM_DT));
-                    } else if(!StringUtils.equals(line.get(MemberHistory.MEME_FIRST_NAME),storedLine.get(MemberHistory.MEME_FIRST_NAME)) ||
-                              !StringUtils.equals(line.get(MemberHistory.MEME_LAST_NAME),storedLine.get(MemberHistory.MEME_LAST_NAME))   ||
-                              !StringUtils.equals(line.get(MemberHistory.MEME_REL),storedLine.get(MemberHistory.MEME_REL))){
+                        storedStart = new LocalDate(line.get(MemberHistory.MEME_EFF_DT.toString()));
+                        storedEnd = new LocalDate(line.get(MemberHistory.MEME_TERM_DT.toString()));
+                    } else if(!StringUtils.equals(line.get(MemberHistory.MEME_FIRST_NAME.toString()),storedLine.get(MemberHistory.MEME_FIRST_NAME.toString())) ||
+                              !StringUtils.equals(line.get(MemberHistory.MEME_LAST_NAME.toString()),storedLine.get(MemberHistory.MEME_LAST_NAME.toString()))   ||
+                              !StringUtils.equals(line.get(MemberHistory.MEME_REL.toString()),storedLine.get(MemberHistory.MEME_REL.toString()))){
                         timeline.storeVector(storedStart, storedEnd, storedLine);
                         storedLine = new HashMap<String,String>(line);
-                        storedStart = new LocalDate(line.get(MemberHistory.MEME_EFF_DT));
-                        storedEnd = new LocalDate(line.get(MemberHistory.MEME_TERM_DT));
+                        storedStart = new LocalDate(line.get(MemberHistory.MEME_EFF_DT.toString()));
+                        storedEnd = new LocalDate(line.get(MemberHistory.MEME_TERM_DT.toString()));
                     } else{
                         storedLine = new HashMap<String,String>(line);
-                        storedEnd = new LocalDate(line.get(MemberHistory.MEME_TERM_DT));
+                        storedEnd = new LocalDate(line.get(MemberHistory.MEME_TERM_DT.toString()));
                     }
                 }
             } else {

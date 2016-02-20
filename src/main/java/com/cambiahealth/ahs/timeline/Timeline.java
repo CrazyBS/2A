@@ -19,12 +19,6 @@ public class Timeline {
     public int storeVector(LocalDate start, LocalDate end, Map<String,String> data) {
         LocalDate startTime = new LocalDate(start);
         LocalDate endTime = new LocalDate(end);
-
-        // Look at existing vectors
-        // If this time overlaps an existing,
-        // adjust existing vectors, both before and after
-        // then insert
-
         TimeVector newVector = new TimeVector(startTime, endTime, data);
 
         timeline.add(newVector);
