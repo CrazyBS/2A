@@ -1,5 +1,6 @@
 package com.cambiahealth.ahs.processors;
 
+import com.cambiahealth.ahs.entity.Column;
 import com.cambiahealth.ahs.entity.ConfidentialAddress;
 import com.cambiahealth.ahs.timeline.Timeline;
 import com.cambiahealth.ahs.timeline.TimelineContext;
@@ -22,10 +23,10 @@ public class TransformProcessorTest {
         Map<String,String> data = new HashMap<String, String>();
         LocalDate start = new LocalDate();
         LocalDate end = new LocalDate();
-        Map<String,String> result;
+        Map<String,Column> result;
 
-        result = new HashMap<String,String>(TransformProcessor.processTransformationForFile(start, end, data));
+        result = new HashMap<String,Column>(TransformProcessor.processTransformationForFile(start, end, data));
 
-        Assert.assertEquals("GROUP", result.get("Group_or_Individual_Code"));
+        Assert.assertEquals("GROUP", result.get("Group_or_Individual_Code").getColumnValue());
     }
 }

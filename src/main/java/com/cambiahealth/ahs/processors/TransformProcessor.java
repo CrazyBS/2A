@@ -5,56 +5,58 @@ import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
  * Created by msnook on 2/19/2016.
  */
 public class TransformProcessor {
-    public static Map<String,String> processTransformationForFile(LocalDate start, LocalDate end, Map<String,String> data){
-        Map<String, String> transformedResult = new HashMap<String, String>();
+    public static LinkedHashMap<String,Column> processTransformationForFile(LocalDate start, LocalDate end, Map<String,String> data){
+        LinkedHashMap<String, Column> transformedResult = new LinkedHashMap<String, Column>();
 
-        String NDW_Plan_ID = (null == data.get(ClaimsConfig.PLAN.toString())) ? "" : processPlan(data.get(ClaimsConfig.PLAN.toString()));
-        String Home_Plan_Product_ID = (null == data.get(AcorsEligibility.PRODUCT_ID.toString())) ? "" : data.get(AcorsEligibility.PRODUCT_ID.toString()).substring(0,14);
-        String NDW_Product_Category_Code = "PPO";
-        String Member_ID = data.get(CspiHistory.MEME_CK.toString());
-        String Consistent_Member_ID = (null == data.get(AcorsEligibility.CTG_ID.toString())) ? "" : data.get(AcorsEligibility.CTG_ID.toString());
-        String Member_Date_of_Birth = (new LocalDate(data.get(AcorsEligibility.DOB.toString()))).toString("yyyyMMdd");
-        String Member_Gender = (null == data.get(AcorsEligibility.GENDER.toString())) ? "U" : data.get(AcorsEligibility.GENDER.toString());
-        String Member_Confidentiality_Code ="";// (data.get(AcorsEligibility.MASK_IND.toString()).equals("Y")) ? "BLU" : (data.get("").equals("CONF")) ? "PHI" : "NON";//TODO Address type
-        String Coverage_Begin_Date = start.toString("yyyyMMdd");
-        String Coverage_End_Date = end.toString("yyyyMMdd");
-        String Member_Relationship = processRelationship((null == data.get(AcorsEligibility.RELATIONSHIP_TO_SUBSCRIBER.toString())) ? "" : data.get(AcorsEligibility.RELATIONSHIP_TO_SUBSCRIBER.toString()));
-        String ITS_Subscriber_ID = data.get(CspiHistory.CSPI_ITS_PREFIX.toString()) + data.get(CspiHistory.SBSB_ID.toString());
-        String Group_or_Individual_Code = "GROUP";
-        String Alpha_Prefix = (null == data.get(CspiHistory.CSPI_ITS_PREFIX.toString())) ? "" : data.get(CspiHistory.CSPI_ITS_PREFIX.toString());
-        String Member_Prefix = (null == data.get(BcbsaMbrPfxSfxXref.BCBSA_MBR_PFX.toString())) ? "" : data.get(BcbsaMbrPfxSfxXref.BCBSA_MBR_PFX.toString());
-        String Member_Last_Name = (null == data.get(MemberHistory.MEME_LAST_NAME.toString())) ? "" : data.get(MemberHistory.MEME_LAST_NAME.toString());
-        String Member_First_Name = (null == data.get(MemberHistory.MEME_FIRST_NAME.toString())) ? "" : data.get(MemberHistory.MEME_FIRST_NAME.toString());
-        String Member_Middle_Initial = (null != data.get(MemberHistory.MEME_MID_INIT.toString()) && data.get(MemberHistory.MEME_MID_INIT.toString()).length() > 0) ? data.get(MemberHistory.MEME_MID_INIT.toString()) + "." : "";
-        String Member_Suffix = (null == data.get(BcbsaMbrPfxSfxXref.BCBSA_MBR_SFX.toString())) ? "" : data.get(BcbsaMbrPfxSfxXref.BCBSA_MBR_SFX.toString());
-        String Member_Primary_Street_Address_1 ="";// (null == data.get("")) ? "" : data.get("");//TODO: All address
-        String Member_Primary_Street_address_2 ="";// (null == data.get("")) ? "" : data.get("");
-        String Member_Primary_City ="";// (null == data.get("")) ? "" : data.get("");
-        String Member_Primary_State ="";// (null == data.get("")) ? "" : data.get("");
-        String Member_Primary_ZIP_Code ="";// (null == data.get("")) ? "" : data.get("").substring(0,4);
-        String Member_Primary_ZIP_Code_4 ="";// (null != data.get("") && data.get("").length() > 5) ? data.get("").substring(5,8) : "0000";
-        String Member_Primary_Phone_Number ="";// (null == data.get("")) ? "0000000000" : data.get("");
-        String Member_Primary_Email_Address ="";// (null != data.get("") && !data.get("").equals("\n")) ? data.get(""): "";
-        String Member_Secondary_Street_Address_1 ="";// (null == data.get("")) ? "" : data.get("");
-        String Member_Secondary_Street_Address_2 ="";// (null == data.get("")) ? "" : data.get("");
-        String Member_Secondary_City ="";// (null == data.get("")) ? "" : data.get("");
-        String Member_Secondary_State = "";// (null == data.get("")) ? "" : data.get("");
-        String Member_Secondary_ZIP_Code ="";// (null == data.get("")) ? "" : data.get("").substring(0,4);
-        String Member_Secondary_ZIP_Code_4 ="";// (null == data.get("")) ? "" : data.get("").substring(5,8);
-        String Host_Plan_Override = (null == data.get(AcorsEligibility.HOST_PLAN_OVERRIDE.toString())) ? "" : data.get(AcorsEligibility.HOST_PLAN_OVERRIDE.toString());
-        String Member_Participation_Code = (null == data.get(AcorsEligibility.ATTRIBUTION_PARN_IND.toString())) ? "N" : data.get(AcorsEligibility.ATTRIBUTION_PARN_IND.toString());
-        String Member_Medical_COB_Code = (null == data.get(Cob.COB_VALUE.toString())) ? "P" : (data.get(Cob.COB_VALUE.toString()).equals("P")) ? "S" : "M";
-        String Void_Indicator = "N";
-        String MMI_Indicator = "";
-        String Host_Plan_Code = "";
-        String Home_Plan_Corporate_Plan_Code = "";
-        String Pharmacy_Carve_Out_Indicator = "";
+        Column NDW_Plan_ID = new Column((null == data.get(ClaimsConfig.PLAN.toString())) ? "" : processPlan(data.get(ClaimsConfig.PLAN.toString())),3);
+        Column Home_Plan_Product_ID = new Column((null == data.get(AcorsEligibility.PRODUCT_ID.toString())) ? "" : data.get(AcorsEligibility.PRODUCT_ID.toString()).substring(0,14),15);
+        Column NDW_Product_Category_Code = new Column("PPO",3);
+        Column Member_ID = new Column(data.get(CspiHistory.MEME_CK.toString()),22);
+        Column Consistent_Member_ID = new Column((null == data.get(AcorsEligibility.CTG_ID.toString())) ? "" : data.get(AcorsEligibility.CTG_ID.toString()),22);
+        Column Member_Date_of_Birth = new Column((new LocalDate(data.get(AcorsEligibility.DOB.toString()))).toString("yyyyMMdd"),8);
+        Column Member_Gender = new Column((null == data.get(AcorsEligibility.GENDER.toString())) ? "U" : data.get(AcorsEligibility.GENDER.toString()),1);
+        Column Member_Confidentiality_Code = new Column("",3);// (data.get(AcorsEligibility.MASK_IND.toString()).equals("Y")) ? "BLU" : (data.get("").equals("CONF")) ? "PHI" : "NON";//TODO Address type
+        Column Coverage_Begin_Date = new Column(start.toString("yyyyMMdd"),8);
+        Column Coverage_End_Date = new Column(end.toString("yyyyMMdd"),8);
+        Column Member_Relationship = new Column(processRelationship((null == data.get(AcorsEligibility.RELATIONSHIP_TO_SUBSCRIBER.toString())) ? "" : data.get(AcorsEligibility.RELATIONSHIP_TO_SUBSCRIBER.toString())),2);
+        Column ITS_Subscriber_ID = new Column(data.get(CspiHistory.CSPI_ITS_PREFIX.toString()) + data.get(CspiHistory.SBSB_ID.toString()),17);
+        Column Group_or_Individual_Code = new Column("GROUP",10);
+        Column Alpha_Prefix = new Column((null == data.get(CspiHistory.CSPI_ITS_PREFIX.toString())) ? "" : data.get(CspiHistory.CSPI_ITS_PREFIX.toString()),3);
+        Column Member_Prefix = new Column((null == data.get(BcbsaMbrPfxSfxXref.BCBSA_MBR_PFX.toString())) ? "" : data.get(BcbsaMbrPfxSfxXref.BCBSA_MBR_PFX.toString()),20);
+        Column Member_Last_Name = new Column((null == data.get(MemberHistory.MEME_LAST_NAME.toString())) ? "" : data.get(MemberHistory.MEME_LAST_NAME.toString()),150);
+        Column Member_First_Name = new Column((null == data.get(MemberHistory.MEME_FIRST_NAME.toString())) ? "" : data.get(MemberHistory.MEME_FIRST_NAME.toString()),70);
+        Column Member_Middle_Initial = new Column((null != data.get(MemberHistory.MEME_MID_INIT.toString()) && data.get(MemberHistory.MEME_MID_INIT.toString()).length() > 0) ? data.get(MemberHistory.MEME_MID_INIT.toString()) + "." : "",2);
+        Column Member_Suffix = new Column((null == data.get(BcbsaMbrPfxSfxXref.BCBSA_MBR_SFX.toString())) ? "" : data.get(BcbsaMbrPfxSfxXref.BCBSA_MBR_SFX.toString()),20);
+        Column Member_Primary_Street_Address_1 = new Column("",70);// (null == data.get("")) ? "" : data.get("");//TODO: All address
+        Column Member_Primary_Street_address_2 = new Column("",70);// (null == data.get("")) ? "" : data.get("");
+        Column Member_Primary_City = new Column("",35);// (null == data.get("")) ? "" : data.get("");
+        Column Member_Primary_State = new Column("",2);// (null == data.get("")) ? "" : data.get("");
+        Column Member_Primary_ZIP_Code = new Column("",5);// (null == data.get("")) ? "" : data.get("").subColumn(0,4);
+        Column Member_Primary_ZIP_Code_4 = new Column("",4);// (null != data.get("") && data.get("").length() > 5) ? data.get("").subColumn(5,8) : "0000";
+        Column Member_Primary_Phone_Number = new Column("",10);// (null == data.get("")) ? "0000000000" : data.get("");
+        Column Member_Primary_Email_Address = new Column("",70);// (null != data.get("") && !data.get("").equals("\n")) ? data.get(""): "";
+        Column Member_Secondary_Street_Address_1 = new Column("",70);// (null == data.get("")) ? "" : data.get("");
+        Column Member_Secondary_Street_Address_2 = new Column("",70);// (null == data.get("")) ? "" : data.get("");
+        Column Member_Secondary_City = new Column("",35);// (null == data.get("")) ? "" : data.get("");
+        Column Member_Secondary_State = new Column("",2);// (null == data.get("")) ? "" : data.get("");
+        Column Member_Secondary_ZIP_Code = new Column("",5);// (null == data.get("")) ? "" : data.get("").subColumn(0,4);
+        Column Member_Secondary_ZIP_Code_4 = new Column("",4);// (null == data.get("")) ? "" : data.get("").subColumn(5,8);
+        Column Host_Plan_Override = new Column((null == data.get(AcorsEligibility.HOST_PLAN_OVERRIDE.toString())) ? "" : data.get(AcorsEligibility.HOST_PLAN_OVERRIDE.toString()),3);
+        Column Member_Participation_Code = new Column((null == data.get(AcorsEligibility.ATTRIBUTION_PARN_IND.toString())) ? "N" : data.get(AcorsEligibility.ATTRIBUTION_PARN_IND.toString()),1);
+        Column Member_Medical_COB_Code = new Column((null == data.get(Cob.COB_VALUE.toString())) ? "P" : (data.get(Cob.COB_VALUE.toString()).equals("P")) ? "S" : "M",1);
+        Column Void_Indicator = new Column("N",1);
+        Column MMI_Indicator = new Column("",22);
+        Column Host_Plan_Code = new Column("",3);
+        Column Home_Plan_Corporate_Plan_Code = new Column("",3);
+        Column Host_Plan_Corporate_Plan_Code = new Column("",3);
+        Column Pharmacy_Carve_Out_Indicator = new Column("",1);
 
         transformedResult.put("NDW_Plan_ID",NDW_Plan_ID);
         transformedResult.put("Home_Plan_Product_ID",Home_Plan_Product_ID);
@@ -101,8 +103,8 @@ public class TransformProcessor {
         return transformedResult;
     }
 
-    public static Map<String,Object> processTransformationForOracle(LocalDate start, LocalDate end, Map<String,String> data){
-        Map<String, Object> transformedResult = new HashMap<String, Object>();
+    public static LinkedHashMap<String,Object> processTransformationForOracle(LocalDate start, LocalDate end, Map<String,String> data){
+        LinkedHashMap<String, Object> transformedResult = new LinkedHashMap<String, Object>();
 
         long MBR_ID = Long.parseLong(data.get(""));//TODO Delayed as unimportant
         DateTime MBR_EFF_DT = new DateTime(start);
