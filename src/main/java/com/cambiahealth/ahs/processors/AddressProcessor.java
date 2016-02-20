@@ -86,7 +86,7 @@ public class AddressProcessor {
                     continue;
                 } else if(rowTest == 0) {
                     subTimeline.storeVector(new LocalDate(line.get(SubscriberAddress.SBSB_EFF_DT.toString())), new LocalDate(line.get(SubscriberAddress.SBSB_TERM_DT.toString())), line);
-                    if (zipCodes.contains(line.get(SubscriberAddress.SBAD_ZIP.toString()))){
+                    if (!zipCodes.contains(line.get(SubscriberAddress.SBAD_ZIP.toString()))){
                         rejectSubTimeline.storeVector(new LocalDate(line.get(SubscriberAddress.SBSB_EFF_DT.toString())), new LocalDate(line.get(SubscriberAddress.SBSB_TERM_DT.toString())), line);
                     }
                 } else {
