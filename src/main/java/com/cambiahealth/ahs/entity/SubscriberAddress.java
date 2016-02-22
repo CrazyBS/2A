@@ -2,6 +2,9 @@ package com.cambiahealth.ahs.entity;
 
 /**
  * Created by bpyl on 2/18/2016.
+ *
+ * Must update the SQL for this pain
+ *
  */
 public enum SubscriberAddress {
     MEME_CK,

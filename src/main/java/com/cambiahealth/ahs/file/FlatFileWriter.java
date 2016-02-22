@@ -12,7 +12,7 @@ import java.util.Map;
  */
 public class FlatFileWriter {
 
-    public static void writeLine(LinkedHashMap<String,Column> data, BufferedWriter writer) throws IOException {
+    public static void writeLine(Map<String,Column> data, BufferedWriter writer) throws IOException {
         String line = generateLine(data);
 
         writer.write(line);
@@ -20,10 +20,10 @@ public class FlatFileWriter {
         writer.flush();
     }
 
-    public static String generateLine(LinkedHashMap<String,Column> data){
+    public static String generateLine(Map<String,Column> data){
         String line = "";
         for(Column column : data.values()){
-            String columnValue = String.format("%1$-" +  column.getColumnLength() + "s", column.getColumnValue());
+            String columnValue = String.format("%1$-" +  column.getColumnLength() + "s", null != column.getColumnValue() ? column.getColumnValue() : "");
             line += columnValue;
         }
         return line;

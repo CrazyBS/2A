@@ -4,7 +4,6 @@ import com.cambiahealth.ahs.file.FileDescriptor;
 import com.cambiahealth.ahs.file.FlatFileResolverFactory;
 import com.cambiahealth.ahs.file.IFlatFileResolver;
 import com.cambiahealth.ahs.file.ResourceFlatFileResolver;
-import com.sun.javaws.security.Resource;
 import org.junit.Test;
 
 import java.io.*;
@@ -39,7 +38,8 @@ public class IntegrationTest {
         Main.create2A(resolver);
 
         ByteArrayOutputStream bos = ((ResourceFlatFileResolver) resolver).getBos();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(bos.toByteArray())));
+        byte[] data = bos.toByteArray();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(data)));
 
         // Write your tests against this reader
         reader.readLine();

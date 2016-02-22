@@ -1,6 +1,7 @@
 package com.cambiahealth.ahs.processors;
 
 import com.cambiahealth.ahs.entity.*;
+import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
 
@@ -12,17 +13,17 @@ import java.util.Map;
  * Created by msnook on 2/19/2016.
  */
 public class TransformProcessor {
-    public static LinkedHashMap<String,Column> processTransformationForFile(LocalDate start, LocalDate end, Map<String,String> data){
+    public static Map<String,Column> processTransformationForFile(LocalDate start, LocalDate end, Map<String,String> data){
         LinkedHashMap<String, Column> transformedResult = new LinkedHashMap<String, Column>();
 
         Column NDW_Plan_ID = new Column((null == data.get(ClaimsConfig.PLAN.toString())) ? "" : processPlan(data.get(ClaimsConfig.PLAN.toString())),3);
-        Column Home_Plan_Product_ID = new Column((null == data.get(AcorsEligibility.PRODUCT_ID.toString())) ? "" : data.get(AcorsEligibility.PRODUCT_ID.toString()).substring(0,14),15);
+        Column Home_Plan_Product_ID = new Column((null == data.get(AcorsEligibility.PRODUCT_ID.toString())) ? "" : StringUtils.substring(data.get(AcorsEligibility.PRODUCT_ID.toString()),0,14),15);
         Column NDW_Product_Category_Code = new Column("PPO",3);
         Column Member_ID = new Column(data.get(CspiHistory.MEME_CK.toString()),22);
         Column Consistent_Member_ID = new Column((null == data.get(AcorsEligibility.CTG_ID.toString())) ? "" : data.get(AcorsEligibility.CTG_ID.toString()),22);
-        Column Member_Date_of_Birth = new Column((new LocalDate(data.get(AcorsEligibility.DOB.toString()))).toString("yyyyMMdd"),8);
-        Column Member_Gender = new Column((null == data.get(AcorsEligibility.GENDER.toString())) ? "U" : data.get(AcorsEligibility.GENDER.toString()),1);
-        Column Member_Confidentiality_Code = new Column("",3);// (data.get(AcorsEligibility.MASK_IND.toString()).equals("Y")) ? "BLU" : (data.get("").equals("CONF")) ? "PHI" : "NON";//TODO Address type
+/* ** */Column Member_Date_of_Birth = new Column((new LocalDate(data.get(AcorsEligibility.DOB.toString()))).toString("yyyyMMdd"),8);
+/* ** */Column Member_Gender = new Column((null == data.get(AcorsEligibility.GENDER.toString())) ? "U" : data.get(AcorsEligibility.GENDER.toString()),1);
+/* ** */Column Member_Confidentiality_Code = new Column(StringUtils.isNotEmpty(data.get(ConsistentFields.IS_BLU.toString())) ? "BLU" : StringUtils.isNotEmpty(data.get(ConsistentFields.IS_PHI.toString())) ? "PHI" : "NON",3);
         Column Coverage_Begin_Date = new Column(start.toString("yyyyMMdd"),8);
         Column Coverage_End_Date = new Column(end.toString("yyyyMMdd"),8);
         Column Member_Relationship = new Column(processRelationship((null == data.get(AcorsEligibility.RELATIONSHIP_TO_SUBSCRIBER.toString())) ? "" : data.get(AcorsEligibility.RELATIONSHIP_TO_SUBSCRIBER.toString())),2);
@@ -34,28 +35,27 @@ public class TransformProcessor {
         Column Member_First_Name = new Column((null == data.get(MemberHistory.MEME_FIRST_NAME.toString())) ? "" : data.get(MemberHistory.MEME_FIRST_NAME.toString()),70);
         Column Member_Middle_Initial = new Column((null != data.get(MemberHistory.MEME_MID_INIT.toString()) && data.get(MemberHistory.MEME_MID_INIT.toString()).length() > 0) ? data.get(MemberHistory.MEME_MID_INIT.toString()) + "." : "",2);
         Column Member_Suffix = new Column((null == data.get(BcbsaMbrPfxSfxXref.BCBSA_MBR_SFX.toString())) ? "" : data.get(BcbsaMbrPfxSfxXref.BCBSA_MBR_SFX.toString()),20);
-        Column Member_Primary_Street_Address_1 = new Column("",70);// (null == data.get("")) ? "" : data.get("");//TODO: All address
-        Column Member_Primary_Street_address_2 = new Column("",70);// (null == data.get("")) ? "" : data.get("");
-        Column Member_Primary_City = new Column("",35);// (null == data.get("")) ? "" : data.get("");
-        Column Member_Primary_State = new Column("",2);// (null == data.get("")) ? "" : data.get("");
-        Column Member_Primary_ZIP_Code = new Column("",5);// (null == data.get("")) ? "" : data.get("").subColumn(0,4);
-        Column Member_Primary_ZIP_Code_4 = new Column("",4);// (null != data.get("") && data.get("").length() > 5) ? data.get("").subColumn(5,8) : "0000";
-        Column Member_Primary_Phone_Number = new Column("",10);// (null == data.get("")) ? "0000000000" : data.get("");
-        Column Member_Primary_Email_Address = new Column("",70);// (null != data.get("") && !data.get("").equals("\n")) ? data.get(""): "";
-        Column Member_Secondary_Street_Address_1 = new Column("",70);// (null == data.get("")) ? "" : data.get("");
-        Column Member_Secondary_Street_Address_2 = new Column("",70);// (null == data.get("")) ? "" : data.get("");
-        Column Member_Secondary_City = new Column("",35);// (null == data.get("")) ? "" : data.get("");
-        Column Member_Secondary_State = new Column("",2);// (null == data.get("")) ? "" : data.get("");
-        Column Member_Secondary_ZIP_Code = new Column("",5);// (null == data.get("")) ? "" : data.get("").subColumn(0,4);
-        Column Member_Secondary_ZIP_Code_4 = new Column("",4);// (null == data.get("")) ? "" : data.get("").subColumn(5,8);
+        Column Member_Primary_Street_Address_1 = new Column(null == data.get(ConfidentialAddress.ENAD_ADDR1.toString()) ? data.get(SubscriberAddress.SBAD_ADDR1.toString()) : data.get(ConfidentialAddress.ENAD_ADDR1.toString()),70);// (null == data.get("")) ? "" : data.get("");//TODO: All address
+        Column Member_Primary_Street_address_2 = new Column(null == data.get(ConfidentialAddress.ENAD_ADDR1.toString()) ? data.get(SubscriberAddress.SBAD_ADDR2.toString()) : data.get(ConfidentialAddress.ENAD_ADDR1.toString()),70);// (null == data.get("")) ? "" : data.get("");
+        Column Member_Primary_City = new Column(null == data.get(ConfidentialAddress.ENAD_ADDR1.toString()) ? data.get(SubscriberAddress.SBAD_CITY.toString()) : data.get(ConfidentialAddress.ENAD_CITY.toString()),35);// (null == data.get("")) ? "" : data.get("");
+        Column Member_Primary_State = new Column(null == data.get(ConfidentialAddress.ENAD_ADDR1.toString()) ? data.get(SubscriberAddress.SBAD_STATE.toString()) : data.get(ConfidentialAddress.ENAD_STATE.toString()),2);// (null == data.get("")) ? "" : data.get("");
+        Column Member_Primary_ZIP_Code = new Column(null == data.get(ConfidentialAddress.ENAD_ADDR1.toString()) ? StringUtils.substring(data.get(SubscriberAddress.SBAD_ZIP.toString()),0,5) : StringUtils.substring(data.get(ConfidentialAddress.ENAD_ZIP.toString()),0,5),5);// (null == data.get("")) ? "" : data.get("").subColumn(0,4);
+        Column Member_Primary_ZIP_Code_4 = new Column(null == data.get(ConfidentialAddress.ENAD_ADDR1.toString()) ? zipCode4(data.get(SubscriberAddress.SBAD_ZIP.toString()),true) : zipCode4(data.get(ConfidentialAddress.ENAD_ZIP.toString()),true),4);// (null != data.get("") && data.get("").length() > 5) ? data.get("").subColumn(5,8) : "0000";
+        Column Member_Primary_Phone_Number = new Column(null == data.get(ConfidentialEmailPhone.ENPH_PHONE.toString()) ? phone(data.get(SubscriberAddress.SBAD_PHONE.toString())) : phone(data.get(ConfidentialEmailPhone.ENPH_PHONE.toString())),10);// (null == data.get("")) ? "0000000000" : data.get("");
+        Column Member_Primary_Email_Address = new Column(null == data.get(ConfidentialEmailPhone.ENEM_EMAIL.toString()) ? data.get(SubscriberAddress.SBAD_EMAIL.toString()) : data.get(ConfidentialEmailPhone.ENEM_EMAIL.toString()),70);// (null != data.get("") && !data.get("").equals("\n")) ? data.get(""): "";
+        Column Member_Secondary_Street_Address_1 = new Column(data.get("secd_" + SubscriberAddress.SBAD_ADDR1.toString()),70);// (null == data.get("")) ? "" : data.get("");
+        Column Member_Secondary_Street_Address_2 = new Column(data.get("secd_" + SubscriberAddress.SBAD_ADDR2.toString()),70);// (null == data.get("")) ? "" : data.get("");
+        Column Member_Secondary_City = new Column(data.get("secd_" + SubscriberAddress.SBAD_CITY.toString()),35);// (null == data.get("")) ? "" : data.get("");
+        Column Member_Secondary_State = new Column(data.get("secd_" + SubscriberAddress.SBAD_STATE.toString()),2);// (null == data.get("")) ? "" : data.get("");
+        Column Member_Secondary_ZIP_Code = new Column(StringUtils.substring(data.get("secd_" + SubscriberAddress.SBAD_ZIP.toString()),0,5),5);// (null == data.get("")) ? "" : data.get("").subColumn(0,4);
+        Column Member_Secondary_ZIP_Code_4 = new Column(zipCode4(data.get("secd_" + SubscriberAddress.SBAD_ZIP.toString()),false),4);// (null == data.get("")) ? "" : data.get("").subColumn(5,8);
         Column Host_Plan_Override = new Column((null == data.get(AcorsEligibility.HOST_PLAN_OVERRIDE.toString())) ? "" : data.get(AcorsEligibility.HOST_PLAN_OVERRIDE.toString()),3);
         Column Member_Participation_Code = new Column((null == data.get(AcorsEligibility.ATTRIBUTION_PARN_IND.toString())) ? "N" : data.get(AcorsEligibility.ATTRIBUTION_PARN_IND.toString()),1);
-        Column Member_Medical_COB_Code = new Column((null == data.get(Cob.COB_VALUE.toString())) ? "P" : (data.get(Cob.COB_VALUE.toString()).equals("P")) ? "S" : "M",1);
+        Column Member_Medical_COB_Code = new Column((null == data.get(Cob.COB_VALUE.toString())) ? "P" : (data.get(Cob.COB_VALUE.toString()).equals("M")) ? "M" : "S",1);
         Column Void_Indicator = new Column("N",1);
         Column MMI_Indicator = new Column("",22);
         Column Host_Plan_Code = new Column("",3);
         Column Home_Plan_Corporate_Plan_Code = new Column("",3);
-        Column Host_Plan_Corporate_Plan_Code = new Column("",3);
         Column Pharmacy_Carve_Out_Indicator = new Column("",1);
 
         transformedResult.put("NDW_Plan_ID",NDW_Plan_ID);
@@ -182,5 +182,15 @@ public class TransformProcessor {
         }
 
         return Member_Relationship;
+    }
+
+    private static String zipCode4(String zip, boolean isPrimary) {
+        String zip4 = StringUtils.trimToEmpty(StringUtils.substring(zip, 5, 9));
+        return (!StringUtils.equals(zip4, "0000") && !StringUtils.isEmpty(zip4)) ? zip4 : isPrimary ? "0000" : "";
+    }
+
+    private static String phone(String phone) {
+        String number = StringUtils.trimToEmpty(StringUtils.substring(phone, 0, 11));
+        return StringUtils.length(number) != 10 ? "0000000000" : phone;
     }
 }

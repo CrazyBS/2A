@@ -2,6 +2,7 @@ package com.cambiahealth.ahs.timeline;
 
 import org.joda.time.LocalDate;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -11,6 +12,7 @@ public class TimeVector {
     private LocalDate start;
     private LocalDate end;
     private Map<String, String> storedObject;
+    private List<TimeVector> dependency;
 
     public TimeVector(LocalDate start, LocalDate end, Map<String, String> storedObject) {
         this.start = start;
@@ -61,5 +63,13 @@ public class TimeVector {
 
     public void setStoredObject(Map<String, String> storedObject) {
         this.storedObject = storedObject;
+    }
+
+    public List<TimeVector> getDependency() {
+        return dependency;
+    }
+
+    public void setDependency(List<TimeVector> dependency) {
+        this.dependency = dependency;
     }
 }

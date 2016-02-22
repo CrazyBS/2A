@@ -1,5 +1,6 @@
 package com.cambiahealth.ahs;
 
+import com.cambiahealth.ahs.file.ResourceFlatFileResolver;
 import com.cambiahealth.ahs.timeline.Timeline;
 import com.cambiahealth.ahs.timeline.TimelineContext;
 import org.joda.time.LocalDate;
@@ -8,7 +9,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.cglib.core.Local;
 
-import java.io.FileNotFoundException;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,8 +25,7 @@ public class CaneCondenserTest {
     }
 
     @Test
-    @Ignore
-    public void testOutputRowTo2A(){
+    public void testOutputRowTo2A() throws IOException {
         Map<TimelineContext,Timeline> myMap = new HashMap<TimelineContext,Timeline>();
         LocalDate today = new LocalDate();
         today = today.minusDays(today.getDayOfMonth());
@@ -122,8 +122,12 @@ public class CaneCondenserTest {
         myMap.put(TimelineContext.ADDRESS_SECONDARY,secondaryAddress);
         myMap.put(TimelineContext.ELIGIBILITY,eligibility);
 
-        Main.outputRowTo2A(null, myMap);
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(bos));
 
+        // Was there an actual test here??
+        Timeline output = Main.outputRowTo2A(writer, myMap);
 
+        // Do some tests?
     }
 }

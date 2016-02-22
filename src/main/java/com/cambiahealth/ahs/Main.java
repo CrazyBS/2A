@@ -1,36 +1,26 @@
 package com.cambiahealth.ahs;
 
 import com.cambiahealth.ahs.entity.AcorsEligibility;
-import com.cambiahealth.ahs.file.FileDescriptor;
-import com.cambiahealth.ahs.file.FlatFileReader;
-import com.cambiahealth.ahs.file.FlatFileResolverFactory;
-import com.cambiahealth.ahs.file.IFlatFileResolver;
-import com.cambiahealth.ahs.processors.AddressProcessor;
-import com.cambiahealth.ahs.processors.CobProcessor;
-import com.cambiahealth.ahs.processors.EligibilityProcessor;
-import com.cambiahealth.ahs.processors.NameProcessor;
+import com.cambiahealth.ahs.entity.Column;
+import com.cambiahealth.ahs.file.*;
+import com.cambiahealth.ahs.processors.*;
+import com.cambiahealth.ahs.timeline.TimeVector;
 import com.cambiahealth.ahs.timeline.Timeline;
 import com.cambiahealth.ahs.timeline.TimelineContext;
-import com.sun.javaws.exceptions.InvalidArgumentException;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.joda.time.Days;
 import org.joda.time.LocalDate;
-import org.joda.time.ReadablePeriod;
-import org.joda.time.Years;
 
 import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.*;
 
 public class Main {
 
-    public static void main(String[] args) throws IOException, ParseException, InvalidArgumentException {
+    public static void main(String[] args) throws IOException, ParseException {
         String basePath;
         if(args.length < 1) {
-            throw new InvalidArgumentException(new String[]{"Must pass base path as first argument"});
+            throw new RuntimeException("Must pass base path as first argument");
         }
 
         basePath = args[0];
@@ -110,7 +100,6 @@ public class Main {
                continue;
             }
 
-
             // Start the next row
             memeCk = lineMemeCk;
 
@@ -142,72 +131,98 @@ public class Main {
         return true;
     }
 
-    static void outputRowTo2A(BufferedWriter writer, Map<TimelineContext, Timeline> timelines) {
+    static Timeline outputRowTo2A(BufferedWriter writer, Map<TimelineContext, Timeline> timelines) throws IOException {
         Timeline cob = timelines.get(TimelineContext.COB);
         Timeline name = timelines.get(TimelineContext.NAME);
         Timeline primaryAddress = timelines.get(TimelineContext.ADDRESS_PRIMARY);
         Timeline secondaryAddress = timelines.get(TimelineContext.ADDRESS_SECONDARY);
         Timeline eligibility = timelines.get(TimelineContext.ELIGIBILITY);
+        Timeline output = new Timeline();
 
-        Timeline cane = new Timeline();
-        HashMap<String, String> curDay = new HashMap<String, String>();
-        HashMap<String, String> nextDay = new HashMap<String, String>();
-        Map<String,String> testMap;
-        LocalDate today = new LocalDate();
-        today = today.minusDays(today.getDayOfMonth());
-        LocalDate twoYear = today.minusYears(2);
-        LocalDate threeYear = today.minusYears(3);
-        LocalDate date = today;
-        LocalDate tmpEnd = date;
+        LocalDate start = new LocalDate().minusMonths(1).withDayOfMonth(1).minusYears(3);
+        LocalDate twoYearStart = start.plusYears(1);
+        LocalDate end = new LocalDate().minusMonths(1).dayOfMonth().withMaximumValue();
 
-        while(date.compareTo(threeYear)>0) {
+        LocalDate curDay = new LocalDate(start);
+        boolean inValid = false;
+        LocalDate validDate = null;
+        Map<String, String> combinedData = new HashMap<String, String>(45);
 
-            curDay.clear();
-            if (cob.get(date) != null) {
-                curDay.putAll(cob.get(date));
-            }
-            if (name.get(date) != null){
-                curDay.putAll(name.get(date));
-            }
-            testMap = primaryAddress.get(date);
-            if(testMap!=null) {
-                curDay.putAll(testMap);
-            }
-            if(secondaryAddress.get(date)!=null) {
-                curDay.putAll(secondaryAddress.get(date));
-            }
-            testMap = eligibility.get(date);
-            if (testMap != null){
-               curDay.putAll(testMap);
-            }
-            if(!nextDay.isEmpty()&&!nextDay.equals(curDay)){
-                if(tmpEnd.compareTo(twoYear)>0&&primaryAddress.get(date.plusDays(1))!=null&&eligibility.get(date.plusDays(1))!=null){
-                    HashMap<String,String> stored = new HashMap<String, String>();
-                    stored.putAll(nextDay);
-                    cane.storeVector(date.plusDays(1),tmpEnd,stored);
+        for(;curDay.isBefore(end.plusDays(1)); curDay = curDay.plusDays(1)) {
+            Map<String, String> primData = primaryAddress.get(curDay);
+            Map<String, String> secdData = secondaryAddress.get(curDay);
+            Map<String, String> nameData = name.get(curDay);
+            Map<String, String> eligData = eligibility.get(curDay);
+            Map<String, String> cobData = cob.get(curDay);
+
+            boolean isValid = (null != primData) && (null != nameData) && (null != eligData);
+
+            // Just like counting words in a sentence.
+            // inValid tells us when we are in a valid timeline
+            // isValid tells us we are currently valid
+            // Once that changes, we need to change the inValid state
+            if(isValid && !inValid) {
+                validDate = new LocalDate(curDay);
+                // Combine timeline data
+                combinedData.putAll(primData);
+                combinedData.putAll(nameData);
+                combinedData.putAll(eligData);
+                if(null != secdData) {
+                    combinedData.putAll(secdData);
                 }
-                tmpEnd = date;
-            }
+                if(null != cobData) {
+                    combinedData.putAll(cobData);
+                }
 
-            nextDay.clear();
-            if(cob.get(date)!=null){
-                nextDay.putAll(cob.get(date));
-            }
-            if(name.get(date)!=null) {
-                nextDay.putAll(name.get(date));
-            }
-            if(primaryAddress.get(date)!=null) {
-                nextDay.putAll(primaryAddress.get(date));
-            }
-            if(secondaryAddress.get(date)!=null) {
-                nextDay.putAll(secondaryAddress.get(date));
-            }
-            if(eligibility.get(date)!=null) {
-                nextDay.putAll(eligibility.get(date));
-            }
+                inValid = true;
+            } else if (!isValid && inValid && twoYearStart.isBefore(curDay)) {
+                // Output row
+                output.storeVector(validDate, curDay.minusDays(1), combinedData);
+                Map<String, Column> row = TransformProcessor.processTransformationForFile(validDate, curDay.minusDays(1), combinedData);
+                FlatFileWriter.writeLine(row, writer);
 
-            date = date.minusDays(1);
+                inValid = false;
+            }
         }
-        int i =0;
+
+        // The final row needs to have a future date if our timeline is valid at the end date
+        if(inValid) {
+            TimeVector primData = primaryAddress.getVector(curDay);
+            TimeVector secdData = secondaryAddress.getVector(curDay);
+            TimeVector nameData = name.getVector(curDay);
+            TimeVector eligData = eligibility.getVector(curDay);
+            TimeVector cobData = cob.getVector(curDay);
+            List<LocalDate> dateList = new ArrayList<LocalDate>();
+            // Ensure the forever date will be the last date
+            dateList.add(new LocalDate(2199,12,31));
+
+            boolean isValid = (null != primData) && (null != nameData) && (null != eligData);
+
+            if(isValid) {
+                combinedData.putAll(primData.getStoredObject());
+                dateList.add(primData.getEnd());
+                combinedData.putAll(nameData.getStoredObject());
+                dateList.add(nameData.getEnd());
+                combinedData.putAll(eligData.getStoredObject());
+                dateList.add(eligData.getEnd());
+                if(null != secdData) {
+                    combinedData.putAll(secdData.getStoredObject());
+                    dateList.add(secdData.getEnd());
+                }
+                if(null != cobData) {
+                    combinedData.putAll(cobData.getStoredObject());
+                    dateList.add(cobData.getEnd());
+                }
+
+                // Use the lowest date of all the vectors
+                Collections.sort(dateList);
+
+                output.storeVector(validDate, dateList.get(0), combinedData);
+                Map<String, Column> row = TransformProcessor.processTransformationForFile(validDate, dateList.get(0), combinedData);
+                FlatFileWriter.writeLine(row, writer);
+            }
+        }
+
+        return output;
     }
 }

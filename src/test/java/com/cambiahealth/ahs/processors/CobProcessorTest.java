@@ -52,8 +52,8 @@ public class CobProcessorTest {
         Map<TimelineContext, Timeline> timelines = new HashMap<TimelineContext, Timeline>();
         CobProcessor.processCob("98848702", timelines);
         /*
-            P|98848702|2015-04-01|9999-12-31
-            M|98848702|2015-02-01|2015-05-31
+            98848702|P|2015-04-01|9999-12-31
+            98848702|M|2015-02-01|2015-05-31
          */
         Map<String, String> P = Collections.singletonMap(Cob.COB_VALUE.toString(),"P");
         Map<String, String> M = Collections.singletonMap(Cob.COB_VALUE.toString(),"M");
@@ -73,22 +73,22 @@ public class CobProcessorTest {
     public void testPreservationOfRows() throws IOException, ParseException {
         Map<TimelineContext, Timeline> timelines = new HashMap<TimelineContext, Timeline>();
         /*
-            P|98848000|1997-05-01|9999-12-31
-            P|98848050|2002-03-01|9999-12-31
-            P|98848051|2008-01-01|9999-12-31
-         */
+            104835155|M|2011-01-01|9999-12-31
+            104913404|P|2015-04-01|9999-12-31
+            105977752|M|2015-02-01|2015-05-31
+        */
 
-        CobProcessor.processCob("98848000", timelines);
+        CobProcessor.processCob("104835155", timelines);
         Assert.assertNotNull(timelines.get(TimelineContext.COB));
         Assert.assertFalse(timelines.get(TimelineContext.COB).isEmpty());
         timelines.clear();
 
-        CobProcessor.processCob("98848050", timelines);
+        CobProcessor.processCob("104913404", timelines);
         Assert.assertNotNull(timelines.get(TimelineContext.COB));
         Assert.assertFalse(timelines.get(TimelineContext.COB).isEmpty());
         timelines.clear();
 
-        CobProcessor.processCob("98848051", timelines);
+        CobProcessor.processCob("105977752", timelines);
         Assert.assertNotNull(timelines.get(TimelineContext.COB));
         Assert.assertFalse(timelines.get(TimelineContext.COB).isEmpty());
     }

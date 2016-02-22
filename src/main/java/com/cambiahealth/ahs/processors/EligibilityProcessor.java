@@ -6,12 +6,11 @@ import com.cambiahealth.ahs.file.FlatFileReader;
 import com.cambiahealth.ahs.file.IFlatFileResolver;
 import com.cambiahealth.ahs.timeline.Timeline;
 import com.cambiahealth.ahs.timeline.TimelineContext;
-import org.joda.time.DateMidnight;
+import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -89,7 +88,16 @@ public class EligibilityProcessor {
                                 if(!confEmailPhoneList.isEmpty()) {
                                     acorsLine.put(ConfidentialEmailPhone.ENEM_EMAIL.toString(), confEmailPhoneList.get(0).get(ConfidentialEmailPhone.ENEM_EMAIL.toString()));
                                     acorsLine.put(ConfidentialEmailPhone.ENPH_PHONE.toString(), confEmailPhoneList.get(0).get(ConfidentialEmailPhone.ENPH_PHONE.toString()));
+                                    timeline.addConsistentData(ConsistentFields.IS_PHI.toString(), "PHI");
                                 }
+
+                                if(StringUtils.equalsIgnoreCase(acorsLine.get(AcorsEligibility.MASK_IND.toString()), "Y")) {
+                                    timeline.addConsistentData(ConsistentFields.IS_BLU.toString(), "BLU");
+                                }
+
+                                // These should be updated with the most recent line of data we have since we are sorted ASC to effective date
+                                timeline.addConsistentData(ConsistentFields.DOB.toString(), acorsLine.get(AcorsEligibility.DOB.toString()));
+                                timeline.addConsistentData(ConsistentFields.GENDER.toString(), acorsLine.get(AcorsEligibility.GENDER.toString()));
 
                                 timeline.storeVector(new LocalDate(acorStart), new LocalDate(acorEnd), acorsLine);
                                 continue acors;
