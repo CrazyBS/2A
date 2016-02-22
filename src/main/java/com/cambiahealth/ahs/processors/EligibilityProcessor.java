@@ -77,7 +77,8 @@ public class EligibilityProcessor {
                                 collectLines(confEmailPhoneReader, meme, ConfidentialEmailPhone.MEME_CK.toString(), confEmailPhoneList);
                                 String plan = claimConfig.get(cspiLine.get(CspiHistory.CSPI_ITS_PREFIX.toString()));
 
-                                if(plan.isEmpty()) {
+                                if(null == plan || plan.isEmpty()) {
+                                    // TODO Log the failed ITS_PREFIX.  It is probably something that should be fixed.
                                     continue acors;
                                 }
 
@@ -98,6 +99,7 @@ public class EligibilityProcessor {
                                 // These should be updated with the most recent line of data we have since we are sorted ASC to effective date
                                 timeline.addConsistentData(ConsistentFields.DOB.toString(), acorsLine.get(AcorsEligibility.DOB.toString()));
                                 timeline.addConsistentData(ConsistentFields.GENDER.toString(), acorsLine.get(AcorsEligibility.GENDER.toString()));
+                                timeline.addConsistentData(ConsistentFields.CTG_ID.toString(), acorsLine.get(AcorsEligibility.CTG_ID.toString()));
 
                                 timeline.storeVector(new LocalDate(acorStart), new LocalDate(acorEnd), acorsLine);
                                 continue acors;

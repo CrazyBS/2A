@@ -1,7 +1,6 @@
 package com.cambiahealth.ahs;
 
-import com.cambiahealth.ahs.entity.AcorsEligibility;
-import com.cambiahealth.ahs.entity.Column;
+import com.cambiahealth.ahs.entity.*;
 import com.cambiahealth.ahs.file.*;
 import com.cambiahealth.ahs.processors.*;
 import com.cambiahealth.ahs.timeline.TimeVector;
@@ -12,6 +11,7 @@ import org.joda.time.LocalDate;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.lang.reflect.Member;
 import java.text.ParseException;
 import java.util.*;
 
@@ -131,6 +131,17 @@ public class Main {
         return true;
     }
 
+    /**
+     * @TODO MUST deal with tracking the columns that change.  Need a new line, when changed.
+     *
+     *  Needs more refactoring...   Too much duplication
+     *
+     *
+     * @param writer
+     * @param timelines
+     * @return
+     * @throws IOException
+     */
     static Timeline outputRowTo2A(BufferedWriter writer, Map<TimelineContext, Timeline> timelines) throws IOException {
         Timeline cob = timelines.get(TimelineContext.COB);
         Timeline name = timelines.get(TimelineContext.NAME);
@@ -147,6 +158,7 @@ public class Main {
         boolean inValid = false;
         LocalDate validDate = null;
         Map<String, String> combinedData = new HashMap<String, String>(45);
+        List<String> triggeredData = new ArrayList<String>(30);
 
         for(;curDay.isBefore(end.plusDays(1)); curDay = curDay.plusDays(1)) {
             Map<String, String> primData = primaryAddress.get(curDay);
@@ -155,7 +167,48 @@ public class Main {
             Map<String, String> eligData = eligibility.get(curDay);
             Map<String, String> cobData = cob.get(curDay);
 
+            // Determine if this date is a valid date
             boolean isValid = (null != primData) && (null != nameData) && (null != eligData);
+            boolean isSame = false;
+
+            if(isValid) {
+                // Determine if we have the same set of data from the last row
+                int hashCode = triggeredData.hashCode();
+                triggeredData.clear();
+                triggeredData.add(eligData.get(AcorsEligibility.RELATIONSHIP_TO_SUBSCRIBER.toString()));
+                triggeredData.add(eligData.get(CspiHistory.CSPI_ITS_PREFIX.toString()));
+                triggeredData.add(eligData.get(CspiHistory.SBSB_ID.toString()));
+                triggeredData.add(nameData.get(MemberHistory.MEME_FIRST_NAME.toString()));
+                triggeredData.add(nameData.get(MemberHistory.MEME_LAST_NAME.toString()));
+                triggeredData.add(eligData.get(AcorsEligibility.ATTRIBUTION_PARN_IND.toString()));
+
+                if(null != cobData) {
+                    triggeredData.add(cobData.get(Cob.COB_VALUE.toString()));
+                }
+
+                // Primary Address
+                boolean isConf = null != primData.get(ConfidentialAddress.ENAD_ADDR1.toString());
+                triggeredData.add(isConf ? primData.get(ConfidentialAddress.ENAD_ADDR1.toString()) : primData.get(SubscriberAddress.SBAD_ADDR1.toString()));
+                triggeredData.add(isConf ? primData.get(ConfidentialAddress.ENAD_ADDR2.toString()) : primData.get(SubscriberAddress.SBAD_ADDR2.toString()));
+                triggeredData.add(isConf ? primData.get(ConfidentialAddress.ENAD_CITY.toString()) : primData.get(SubscriberAddress.SBAD_CITY.toString()));
+                triggeredData.add(isConf ? primData.get(ConfidentialAddress.ENAD_STATE.toString()) : primData.get(SubscriberAddress.SBAD_STATE.toString()));
+                triggeredData.add(isConf ? primData.get(ConfidentialAddress.ENAD_ZIP.toString()) : primData.get(SubscriberAddress.SBAD_ZIP.toString()));
+
+                if(null != secdData) {
+                    // Secondary Address
+                    triggeredData.add(secdData.get("secd_" + SubscriberAddress.SBAD_ADDR1.toString()));
+                    triggeredData.add(secdData.get("secd_" + SubscriberAddress.SBAD_ADDR2.toString()));
+                    triggeredData.add(secdData.get("secd_" + SubscriberAddress.SBAD_CITY.toString()));
+                    triggeredData.add(secdData.get("secd_" + SubscriberAddress.SBAD_STATE.toString()));
+                    triggeredData.add(secdData.get("secd_" + SubscriberAddress.SBAD_ZIP.toString()));
+                }
+
+                isSame = triggeredData.hashCode() == hashCode;
+            } else {
+                isSame = false;
+            }
+            // Collect the trigger columns
+
 
             // Just like counting words in a sentence.
             // inValid tells us when we are in a valid timeline
@@ -175,7 +228,7 @@ public class Main {
                 }
 
                 inValid = true;
-            } else if (!isValid && inValid && twoYearStart.isBefore(curDay)) {
+            } else if ((!isValid || !isSame) && inValid && twoYearStart.isBefore(curDay)) {
                 // Output row
                 output.storeVector(validDate, curDay.minusDays(1), combinedData);
                 Map<String, Column> row = TransformProcessor.processTransformationForFile(validDate, curDay.minusDays(1), combinedData);
@@ -196,7 +249,7 @@ public class Main {
             // Ensure the forever date will be the last date
             dateList.add(new LocalDate(2199,12,31));
 
-            boolean isValid = (null != primData) && (null != nameData) && (null != eligData);
+            boolean isValid = (null != primData && null != primData.getStoredObject()) && (null != nameData && null != nameData.getStoredObject()) && (null != eligData && null != eligData.getStoredObject());
 
             if(isValid) {
                 combinedData.putAll(primData.getStoredObject());

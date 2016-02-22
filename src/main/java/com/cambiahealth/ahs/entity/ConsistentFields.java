@@ -7,5 +7,6 @@ public enum ConsistentFields {
     IS_BLU,
     IS_PHI,
     DOB,
-    GENDER
+    GENDER,
+    CTG_ID
 }

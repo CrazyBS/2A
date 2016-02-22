@@ -190,11 +190,11 @@ public class AddressProcessor {
     }
 
     private static boolean isValidOutOfArea(String state, String zip) {
-        return stringIn(state, outOfAreaStates) || "WA".equals(state) && zipCodes.contains(StringUtils.substring(zip, 0, 6));
+        return null != state && null != zip && (stringIn(state, outOfAreaStates) || "WA".equals(state) && zipCodes.contains(StringUtils.substring(zip, 0, 6)));
     }
 
     private static boolean isValidState(String state) {
-        return stringIn(state, outOfAreaStates) || stringIn(state, inAreaStates) || "WA".equals(state);
+        return null != state &&  (stringIn(state, outOfAreaStates) || stringIn(state, inAreaStates) || "WA".equals(state));
     }
 
     private static boolean stringIn(String left, String ... rightStrings) {
