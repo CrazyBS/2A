@@ -12,7 +12,6 @@ import org.joda.time.LocalDate;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.lang.reflect.Member;
 import java.text.ParseException;
 import java.util.*;
 
@@ -103,7 +102,7 @@ public class Main {
             memeCk = lineMemeCk;
 
             if(processMeme(lineMemeCk, timelines)) {
-                outputRowTo2A(writer, timelines);
+                outputRowsTo2A(writer, timelines);
             }
         }
     }
@@ -131,17 +130,11 @@ public class Main {
     }
 
     /**
-     * @TODO MUST deal with tracking the columns that change.  Need a new line, when changed.
-     *
-     *  Needs more refactoring...   Too much duplication
-     *
-     *
-     * @param writer
-     * @param timelines
-     * @return
-     * @throws IOException
+     * Walks through all the time vectors and produces changes that occurred in the last 2 years
+     * Previous versions walked all 735 days by force, this version takes advantage of vectors
+     * to jump ahead where possible.
      */
-    static Timeline outputRowTo2A(BufferedWriter writer, Map<TimelineContext, Timeline> timelines) throws IOException {
+    static Timeline outputRowsTo2A(BufferedWriter writer, Map<TimelineContext, Timeline> timelines) throws IOException {
         Timeline cob = timelines.get(TimelineContext.COB);
         Timeline name = timelines.get(TimelineContext.NAME);
         Timeline primaryAddress = timelines.get(TimelineContext.ADDRESS_PRIMARY);
@@ -150,20 +143,20 @@ public class Main {
         Timeline output = new Timeline();
 
         LocalDate start = new LocalDate().minusMonths(1).withDayOfMonth(1).minusYears(2);
-
         LocalDate end = new LocalDate().minusMonths(1).dayOfMonth().withMaximumValue();
 
         LocalDate curDay = new LocalDate(start);
-        LocalDate validDate = null;
+        LocalDate rowStartDate = null;
         Map<String, String> combinedData = new HashMap<String, String>(45);
         int prevHashCode = 1;
         boolean shouldStartNewRow;
         boolean shouldOutputRow;
         boolean hasRowToOutput = false;
         boolean firstDay = true;
-        LocalDate highestStart = new LocalDate();
-        LocalDate lowestEnd = new LocalDate();
+        LocalDate highestStart = new LocalDate(1960,1,1);
+        LocalDate lowestEnd = new LocalDate(2199,12,31);
 
+        // Loop over the timeline.  curDay will increment based on the earliest next vector
         for(;curDay.isBefore(end.plusDays(1));) {
             TimeVector primVector = primaryAddress.getVector(curDay);
             TimeVector secdVector = secondaryAddress.getVector(curDay);
@@ -171,20 +164,25 @@ public class Main {
             TimeVector eligVector = eligibility.getVector(curDay);
             TimeVector cobVector  = cob.getVector(curDay);
 
+            // We need to determine what our earliest vector date is, so we can set the start date to it
             if(firstDay) {
                 highestStart = getHighest(primVector.getStart(), secdVector.getStart(), nameVector.getStart(), eligVector.getStart(), cobVector.getStart());
             }
+
+            // This date represents the earliest we can jump to the next vector
             lowestEnd = getLowest(primVector.getEnd(), secdVector.getEnd(), nameVector.getEnd(), eligVector.getEnd(), cobVector.getEnd());
 
+            // Retrieve our actual map data
             Map<String, String> primData = primVector.getStoredObject();
             Map<String, String> secdData = secdVector.getStoredObject();
             Map<String, String> nameData = nameVector.getStoredObject();
             Map<String, String> eligData = eligVector.getStoredObject();
             Map<String, String> cobData  = cobVector.getStoredObject();
 
-            // Determine if this date is a valid date
+            // Determine if this date is a valid row
             boolean isValid = (null != primData) && (null != nameData) && (null != eligData);
 
+            // We will use isSame to determine if data has changed from one vector to another
             boolean isSame;
             if(isValid) {
                 // Determine if we have the same set of data from the last row
@@ -195,26 +193,24 @@ public class Main {
                 isSame = false;
             }
 
-            // Collect the trigger columns
+            // These are the final decisions about whether we are outputting and/or storing a row of data
             shouldOutputRow = hasRowToOutput && (!isValid || !isSame);
             shouldStartNewRow = isValid && !isSame;
 
             if (shouldOutputRow) {
                 // Output row
-                output.storeVector(validDate, curDay.minusDays(1), combinedData);
-                Map<String, Column> row = TransformProcessor.processTransformationForFile(validDate, curDay.minusDays(1), combinedData);
+                output.storeVector(rowStartDate, curDay.minusDays(1), combinedData);
+                Map<String, Column> row = TransformProcessor.processTransformationForFile(rowStartDate, curDay.minusDays(1), combinedData);
                 FlatFileWriter.writeLine(row, writer);
 
+                // Reset loop
                 hasRowToOutput = false;
                 combinedData.clear();
             }
 
-            // Just like counting words in a sentence.
-            // inValid tells us when we are in a valid timeline
-            // isValid tells us we are currently valid
-            // Once that changes, we need to change the inValid state
             if(shouldStartNewRow) {
-                validDate = firstDay ? highestStart : new LocalDate(curDay);
+                // If we are the first day, I want to get the earliest date from the vectors
+                rowStartDate = firstDay ? highestStart : new LocalDate(curDay);
                 // Combine timeline data
                 combinedData.putAll(primData);
                 combinedData.putAll(nameData);
@@ -226,17 +222,19 @@ public class Main {
                     combinedData.putAll(cobData);
                 }
 
+                // Ensure we indicate that we are now in a valid row of data
                 hasRowToOutput = true;
             }
 
             firstDay = false;
+            // Jump to one day after the earliest vector end
             curDay = lowestEnd.plusDays(1);
         }
 
         if (hasRowToOutput) {
-            // Output row
-            output.storeVector(validDate, lowestEnd, combinedData);
-            Map<String, Column> row = TransformProcessor.processTransformationForFile(validDate, lowestEnd, combinedData);
+            // Output the last row using the largest end date of the current vectors
+            output.storeVector(rowStartDate, lowestEnd, combinedData);
+            Map<String, Column> row = TransformProcessor.processTransformationForFile(rowStartDate, lowestEnd, combinedData);
             FlatFileWriter.writeLine(row, writer);
         }
 
@@ -259,6 +257,14 @@ public class Main {
         return highestDate;
     }
 
+    /**
+     * Using all the columns we have been told should trigger a new row, this method determines the
+     * hash code of the data you send it.  Use this to determine if row data has "changed" enough
+     * to trigger a new row.
+     *
+     * Code stolen from the ArrayList hashCode() method.
+     *
+     */
     private static int getTriggeredHashCode(Map<String, String> eligData, Map<String, String> nameData, Map<String, String> cobData, Map<String, String> primData, Map<String, String> secdData) {
         int hashCode = 1;
 

@@ -126,6 +126,30 @@ public class TimelineTest {
         Assert.assertNotNull(test.getVector(new LocalDate(2014,1,1)));
         Assert.assertNull(test.getVector(new LocalDate(2016,12,31)).getStoredObject());
         Assert.assertEquals(test.getVector(new LocalDate(2016,12,31)).getStart(), new LocalDate(2016,8,1));
+    }
+
+    @Test
+    public void testGetVectorWithDependency() {
+        Timeline test = new Timeline();
+        Timeline dep = new Timeline();
+
+        dep.storeVector(new LocalDate(2015,1,1), new LocalDate(2015,12,31), data);
+        test.storeVector(new LocalDate(2015,7,1), new LocalDate(2016,7,31), otherData, dep);
+
+        Assert.assertNotNull(test.getVector(new LocalDate(2016,2,1)));
+        Assert.assertNull(test.getVector(new LocalDate(2016,2,1)).getStoredObject());
+        Assert.assertEquals(new LocalDate(2016,1,1), test.getVector(new LocalDate(2016,2,1)).getStart());
+        Assert.assertEquals(new LocalDate(2016,7,31), test.getVector(new LocalDate(2016,2,1)).getEnd());
+
+        Assert.assertNotNull(test.getVector(new LocalDate(2015,2,1)));
+        Assert.assertNull(test.getVector(new LocalDate(2015,2,1)).getStoredObject());
+        Assert.assertEquals(new LocalDate(1960,1,1), test.getVector(new LocalDate(2015,2,1)).getStart());
+        Assert.assertEquals(new LocalDate(2015,6,30), test.getVector(new LocalDate(2015,2,1)).getEnd());
+
+        Assert.assertNotNull(test.getVector(new LocalDate(2014,1,1)));
+        Assert.assertNull(test.getVector(new LocalDate(2014,1,1)).getStoredObject());
+        Assert.assertEquals(new LocalDate(1960,1,1), test.getVector(new LocalDate(2014,1,1)).getStart());
+        Assert.assertEquals(new LocalDate(2015,6,30), test.getVector(new LocalDate(2014,1,1)).getEnd());
 
     }
 }
