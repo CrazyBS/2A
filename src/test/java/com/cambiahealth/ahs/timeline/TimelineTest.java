@@ -59,4 +59,73 @@ public class TimelineTest {
         Assert.assertEquals(otherData, test.get(new LocalDate(2015,12,31)));
         Assert.assertNotEquals(otherData, test.get(new LocalDate(2016,8,1)));
     }
+
+    @Test
+    public void testConsistentData() {
+        Timeline test = new Timeline();
+        test.addConsistentData("consistent", "data");
+
+        test.storeVector(new LocalDate(2015,1,1), new LocalDate(2015,12,31), data);
+
+        Assert.assertEquals(test.get(new LocalDate(2015,7,1)).get("consistent"), "data");
+    }
+
+    @Test
+    public void testGetVector() {
+        Timeline test = new Timeline();
+
+        test.storeVector(new LocalDate(2015,1,1), new LocalDate(2015,12,31), data);
+
+        TimeVector vector = test.getVector(new LocalDate(2015,7,1));
+
+        Assert.assertNotNull(vector);
+        Assert.assertTrue(vector.getStart().equals(new LocalDate(2015,1,1)));
+        Assert.assertTrue(vector.getEnd().equals(new LocalDate(2015,12,31)));
+        Assert.assertEquals(vector.getStoredObject(), data);
+    }
+
+    @Test
+    public void testVectorRanges() {
+        Timeline test = new Timeline();
+
+        test.storeVector(new LocalDate(2015,1,1), new LocalDate(2015,12,31), data);
+        test.storeVector(new LocalDate(2014,7,1), new LocalDate(2015,4,30), otherData);
+        test.storeVector(new LocalDate(2015,9,1), new LocalDate(2016,6,30), otherData);
+
+        TimeVector vector = test.getVector(new LocalDate(2015, 7, 1));
+
+        Assert.assertNotNull(vector);
+        Assert.assertTrue(vector.getStart().equals(new LocalDate(2015,5,1)));
+        Assert.assertTrue(vector.getEnd().equals(new LocalDate(2015,8,31)));
+        Assert.assertEquals(vector.getStoredObject(), data);
+    }
+
+    @Test
+    public void testDependency() {
+        Timeline test = new Timeline();
+        Timeline dep = new Timeline();
+
+        dep.storeVector(new LocalDate(2015,1,1), new LocalDate(2015,12,31), data);
+        test.storeVector(new LocalDate(2015,7,1), new LocalDate(2016,7,1), otherData, dep);
+
+        Assert.assertNull(test.get(new LocalDate(2015,1,1)));
+        Assert.assertNull(test.get(new LocalDate(2016,1,1)));
+        Assert.assertEquals(test.get(new LocalDate(2015,12,31)), otherData);
+    }
+
+    @Test
+    public void testGetVectorInvalidRange() {
+        Timeline test = new Timeline();
+
+        test.storeVector(new LocalDate(2015,1,1), new LocalDate(2015,12,31), data);
+        test.storeVector(new LocalDate(2015,7,1), new LocalDate(2016,7,31), otherData);
+
+        Assert.assertNotNull(test.getVector(new LocalDate(2014,1,1)));
+        Assert.assertNull(test.getVector(new LocalDate(2014,1,1)).getStoredObject());
+        Assert.assertEquals(test.getVector(new LocalDate(2014,1,1)).getEnd(), new LocalDate(2014,12,31));
+        Assert.assertNotNull(test.getVector(new LocalDate(2014,1,1)));
+        Assert.assertNull(test.getVector(new LocalDate(2016,12,31)).getStoredObject());
+        Assert.assertEquals(test.getVector(new LocalDate(2016,12,31)).getStart(), new LocalDate(2016,8,1));
+
+    }
 }

@@ -50,17 +50,35 @@ public class Timeline {
         return getVector(index, this.timeline);
     }
 
+    /**
+     *
+     * Given the following timeline:
+     *        A-------------B
+     * C--------D   ^
+     *              |  E----------F
+     *            index
+     *           |----| <- result
+     * This index will return a vector from a day after D to a day before E.  The period of time the vector is "valid" in the current timeline.
+     *
+     * @param index
+     * @param timeline
+     * @return
+     */
     private TimeVector getVector(LocalDate index, List<TimeVector> timeline) {
         // Find the date that intersects this one and return the object
         ListIterator<TimeVector> iter = timeline.listIterator(timeline.size());
         LocalDate day = new LocalDate(index);
+        LocalDate nearestBeforeDate = new LocalDate(1959,12,31);
+        LocalDate nearestAfterDate = new LocalDate(2200,1,1);
 
         while(iter.hasPrevious()) {
             TimeVector vector = iter.previous();
             if((vector.getStart().isBefore(day) || vector.getStart().isEqual(day))
                     && vector.getEnd().isAfter(day) || vector.getEnd().isEqual(day)) {
 
-                TimeVector newVector = new TimeVector(vector.getStart(), vector.getEnd(), getStoredData(vector.getStoredObject()));
+                TimeVector newVector = new TimeVector(nearestBeforeDate.isAfter(vector.getStart()) ? nearestBeforeDate.plusDays(1) : vector.getStart(),
+                                                      nearestAfterDate.isBefore(vector.getEnd()) ? nearestAfterDate.minusDays(1) : vector.getEnd(),
+                                                      getStoredData(vector.getStoredObject()));
                 newVector.setDependency(vector.getDependency());
 
                 // We have a vector that matches
@@ -68,13 +86,23 @@ public class Timeline {
                 if (null == vector.getDependency()) {
                     return newVector;
                 } else {
-                    return (null == getVector(index, vector.getDependency())) ? null : newVector;
+                    TimeVector depVector = getVector(index, vector.getDependency());
+                    newVector.setStart(depVector.getStart().isAfter(newVector.getStart()) ? depVector.getStart() : newVector.getStart());
+                    newVector.setEnd(depVector.getEnd().isBefore(newVector.getEnd()) ? depVector.getEnd() : newVector.getEnd());
+                    if(null == depVector.getStoredObject()) {
+                        newVector.setStoredObject(null);
+                    }
+
+                    return newVector;
                 }
 
+            } else {
+                nearestAfterDate = vector.getStart().isAfter(index) && vector.getStart().isBefore(nearestAfterDate) ? vector.getStart() : nearestAfterDate;
+                nearestBeforeDate = vector.getEnd().isBefore(index) && vector.getEnd().isAfter(nearestBeforeDate) ? vector.getEnd() : nearestBeforeDate;
             }
         }
 
-        return null;
+        return new TimeVector(nearestBeforeDate.plusDays(1), nearestAfterDate.minusDays(1), null);
     }
 
     public void addAll(Timeline timeline) {
