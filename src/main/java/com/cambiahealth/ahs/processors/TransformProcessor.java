@@ -35,7 +35,7 @@ public class TransformProcessor {
         Column Member_First_Name = new Column((null == data.get(MemberHistory.MEME_FIRST_NAME.toString())) ? "" : data.get(MemberHistory.MEME_FIRST_NAME.toString()),70);
         Column Member_Middle_Initial = new Column((null != data.get(MemberHistory.MEME_MID_INIT.toString()) && data.get(MemberHistory.MEME_MID_INIT.toString()).length() > 0) ? data.get(MemberHistory.MEME_MID_INIT.toString()) + "." : "",2);
         Column Member_Suffix = new Column((null == data.get(BcbsaMbrPfxSfxXref.BCBSA_MBR_SFX.toString())) ? "" : data.get(BcbsaMbrPfxSfxXref.BCBSA_MBR_SFX.toString()),20);
-        Column Member_Primary_Street_Address_1 = new Column(null == data.get(ConfidentialAddress.ENAD_ADDR1.toString()) ? data.get(SubscriberAddress.SBAD_ADDR1.toString()) : data.get(ConfidentialAddress.ENAD_ADDR1.toString()),70);// (null == data.get("")) ? "" : data.get("");//TODO: All address
+        Column Member_Primary_Street_Address_1 = new Column(null == data.get(ConfidentialAddress.ENAD_ADDR1.toString()) ? data.get(SubscriberAddress.SBAD_ADDR1.toString()) : data.get(ConfidentialAddress.ENAD_ADDR1.toString()),70);// (null == data.get("")) ? "" : data.get("");
         Column Member_Primary_Street_address_2 = new Column(null == data.get(ConfidentialAddress.ENAD_ADDR1.toString()) ? data.get(SubscriberAddress.SBAD_ADDR2.toString()) : data.get(ConfidentialAddress.ENAD_ADDR1.toString()),70);// (null == data.get("")) ? "" : data.get("");
         Column Member_Primary_City = new Column(null == data.get(ConfidentialAddress.ENAD_ADDR1.toString()) ? data.get(SubscriberAddress.SBAD_CITY.toString()) : data.get(ConfidentialAddress.ENAD_CITY.toString()),35);// (null == data.get("")) ? "" : data.get("");
         Column Member_Primary_State = new Column(null == data.get(ConfidentialAddress.ENAD_ADDR1.toString()) ? data.get(SubscriberAddress.SBAD_STATE.toString()) : data.get(ConfidentialAddress.ENAD_STATE.toString()),2);// (null == data.get("")) ? "" : data.get("");
@@ -103,15 +103,19 @@ public class TransformProcessor {
         return transformedResult;
     }
 
+    /**
+     * TODO: May still need this in the future, but not for now.
+     *
+     */
     public static LinkedHashMap<String,Object> processTransformationForOracle(LocalDate start, LocalDate end, Map<String,String> data){
         LinkedHashMap<String, Object> transformedResult = new LinkedHashMap<String, Object>();
 
-        long MBR_ID = Long.parseLong(data.get(""));//TODO Delayed as unimportant
+        long MBR_ID = Long.parseLong(data.get(""));
         DateTime MBR_EFF_DT = new DateTime(start);
         String HOME_PLN_MBR_ID = data.get(CspiHistory.MEME_CK.toString());
         String BCBSA_CMI = (null == data.get(AcorsEligibility.CTG_ID.toString())) ? data.get(CspiHistory.MEME_CK.toString()) : data.get(AcorsEligibility.CTG_ID.toString());
         String BCBSA_MMI = "";
-        String MBR_CONFDNTL_CD ="";// (data.get(AcorsEligibility.MASK_IND.toString()).equals("Y")) ? "BLU" : (data.get("").equals("CONF")) ? "PHI" : "NON";//TODO Address type
+        String MBR_CONFDNTL_CD ="";// (data.get(AcorsEligibility.MASK_IND.toString()).equals("Y")) ? "BLU" : (data.get("").equals("CONF")) ? "PHI" : "NON";
         String ALPH_PFX = data.get("");
         String MBR_NAME_PFX = (null == data.get(BcbsaMbrPfxSfxXref.BCBSA_MBR_PFX.toString())) ? "" : data.get(BcbsaMbrPfxSfxXref.BCBSA_MBR_PFX.toString());
         String MBR_NAME_SFX = (null == data.get(BcbsaMbrPfxSfxXref.BCBSA_MBR_SFX.toString())) ? "" : data.get("");

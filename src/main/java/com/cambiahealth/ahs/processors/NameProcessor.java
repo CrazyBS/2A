@@ -31,7 +31,7 @@ public class NameProcessor {
 
         while(true){
             Map<String, String> line;
-            line = fixReader.readColumn(); //TODO Create file
+            line = fixReader.readColumn();
             if(line == null){
                 break;
             } else {

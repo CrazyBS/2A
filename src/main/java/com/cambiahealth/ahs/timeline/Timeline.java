@@ -58,11 +58,9 @@ public class Timeline {
      *              |  E----------F
      *            index
      *           |----| <- result
+     *
      * This index will return a vector from a day after D to a day before E.  The period of time the vector is "valid" in the current timeline.
      *
-     * @param index
-     * @param timeline
-     * @return
      */
     private TimeVector getVector(LocalDate index, List<TimeVector> timeline) {
         // Find the date that intersects this one and return the object

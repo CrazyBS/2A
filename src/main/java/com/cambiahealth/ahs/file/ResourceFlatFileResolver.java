@@ -19,7 +19,6 @@ public class ResourceFlatFileResolver implements IFlatFileResolver {
     }
 
     public BufferedWriter writeFile(FileDescriptor descriptor) throws IOException {
-        // TODO:  How do we handle this for test!!
         return new BufferedWriter(new OutputStreamWriter(bos));
     }
 
