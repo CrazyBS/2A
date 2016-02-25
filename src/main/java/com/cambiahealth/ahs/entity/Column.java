@@ -8,8 +8,11 @@ public class Column {
     public int columnLength;
 
     public Column() {
-        columnValue = "";
-        columnLength = 0;
+        this("", 0);
+    }
+
+    public Column(String value){
+        this(value, 0);
     }
 
     public Column(String value, int length){

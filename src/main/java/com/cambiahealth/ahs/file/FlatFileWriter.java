@@ -16,7 +16,7 @@ public class FlatFileWriter {
         String line = generateLine(data);
 
         writer.write(line);
-        writer.newLine();
+        writer.write('\n');
         writer.flush();
     }
 

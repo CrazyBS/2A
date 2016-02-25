@@ -17,6 +17,12 @@ import java.util.*;
 
 public class Main {
 
+    private static int totalMeme = 0;
+    private static int rejectedMeme = 0;
+    private static int totalOutputtedRows = 0;
+    private static int rejectedAfterTimelineReview = 0;
+    private static int rejectedQuickly = 0;
+
     public static void main(String[] args) throws IOException, ParseException {
         String basePath;
         if(args.length < 1) {
@@ -42,6 +48,11 @@ public class Main {
         IFlatFileResolver resolver = factory.getInstance(descriptors);
 
         create2A(resolver);
+
+        System.out.println("Total MEME_CK's processed: " + totalMeme);
+        System.out.println("Total MEME_CK's rejected: " + rejectedMeme + " (quickly: " + rejectedQuickly + ")(after review: " + rejectedAfterTimelineReview + ")");
+        System.out.println("Total MEME_CK's outputted: " + (totalMeme - rejectedMeme));
+        System.out.println("Total outputted rows: " + totalOutputtedRows);
     }
 
     public static void create2A(IFlatFileResolver resolver) throws IOException, ParseException {
@@ -102,7 +113,15 @@ public class Main {
             memeCk = lineMemeCk;
 
             if(processMeme(lineMemeCk, timelines)) {
-                outputRowsTo2A(writer, timelines);
+                totalMeme++;
+                Timeline output = outputRowsTo2A(writer, timelines);
+                if(output.isEmpty()) {
+                    rejectedMeme++;
+                    rejectedAfterTimelineReview++;
+                }
+            } else {
+                rejectedMeme++;
+                rejectedQuickly++;
             }
         }
     }
@@ -199,6 +218,7 @@ public class Main {
 
             if (shouldOutputRow) {
                 // Output row
+                totalOutputtedRows++;
                 output.storeVector(rowStartDate, curDay.minusDays(1), combinedData);
                 Map<String, Column> row = TransformProcessor.processTransformationForFile(rowStartDate, curDay.minusDays(1), combinedData);
                 FlatFileWriter.writeLine(row, writer);
@@ -234,6 +254,7 @@ public class Main {
         if (hasRowToOutput) {
             // Output the last row using the largest end date of the current vectors
             output.storeVector(rowStartDate, lowestEnd, combinedData);
+            totalOutputtedRows++;
             Map<String, Column> row = TransformProcessor.processTransformationForFile(rowStartDate, lowestEnd, combinedData);
             FlatFileWriter.writeLine(row, writer);
         }

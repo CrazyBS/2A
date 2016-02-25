@@ -1,9 +1,8 @@
 package com.cambiahealth.ahs;
 
+import com.cambiahealth.ahs.file.*;
 import com.cambiahealth.ahs.file.FileDescriptor;
-import com.cambiahealth.ahs.file.FlatFileResolverFactory;
-import com.cambiahealth.ahs.file.IFlatFileResolver;
-import com.cambiahealth.ahs.file.ResourceFlatFileResolver;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.*;
@@ -28,7 +27,7 @@ public class IntegrationTest {
             descriptors.put(FileDescriptor.SUBSCRIBER_ADDRESS_EXTRACT, "OOA_Sub_Address_Extract.dat");
             descriptors.put(FileDescriptor.ZIP_CODE_EXTRACT, "OOA_Zipcode_Extract.dat");
             descriptors.put(FileDescriptor.BCBSA_MBR_PFX_SFX_XREF, "OOA_Title_Extract.dat");
-            descriptors.put(FileDescriptor.FINAL_2A_OUTPUT, "ndw_member");
+            descriptors.put(FileDescriptor.FINAL_2A_OUTPUT, "expected_ndw_member");
     }
     FlatFileResolverFactory factory = new FlatFileResolverFactory(true);
     IFlatFileResolver resolver = factory.getInstance(descriptors);
@@ -39,11 +38,28 @@ public class IntegrationTest {
 
         ByteArrayOutputStream bos = ((ResourceFlatFileResolver) resolver).getBos();
         byte[] data = bos.toByteArray();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(data)));
+        BufferedReader output = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(data)));
+        FlatFileReader actual = new FlatFileReader(output, FileDescriptor.FINAL_2A_OUTPUT);
+        FlatFileReader expected = resolver.getFile(FileDescriptor.FINAL_2A_OUTPUT);
 
         // Write your tests against this reader
-        reader.readLine();
 
-        reader.close();
+        Map<String, String> actualData;
+        Map<String, String> expectedData;
+
+        while(true) {
+            actualData = actual.readColumn();
+            expectedData = expected.readColumn();
+            if(null == actualData && null == expectedData) {
+                break;
+            } else if (null != actualData && null != expectedData) {
+                Assert.assertTrue(actualData.equals(expectedData));
+            } else {
+                //Assert.fail("Expect and Actual number of lines is not the same");
+            }
+        }
+
+        actual.close();
+        expected.close();
     }
 }

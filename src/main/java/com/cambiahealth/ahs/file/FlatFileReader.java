@@ -1,5 +1,6 @@
 package com.cambiahealth.ahs.file;
 
+import com.cambiahealth.ahs.entity.Column;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.BufferedReader;
@@ -37,7 +38,39 @@ public class FlatFileReader {
         if(null == line) {
             return null;
         }
-        List<String> columnNames = descriptor.getSchema();
+
+        List<Column> columnNames = descriptor.getSchema();
+
+        if(descriptor.isFixed()) {
+            // Read fixed width columns
+            return readFixedColumns(line, columnNames);
+        } else {
+            // Read delimited columns
+            return readDelimitedColumns(line, columnNames);
+        }
+    }
+
+    private Map<String, String> readFixedColumns(String line, List<Column> columnNames) {
+        HashMap<String, String> rowData = new HashMap<String, String>(columnNames.size());
+
+        int lineSize = line.length();
+        int curStart = 0;
+
+        for(Column column : columnNames) {
+            if(lineSize < (curStart + column.getColumnLength())) {
+                throw new RuntimeException("The number of characters in the file: " +
+                        line.length() + " does not match the fixed width columns in the descriptor: " +
+                        columnNames.size() + " from the descriptor: " + descriptor.name() +
+                        "\n" + line);
+            }
+            rowData.put(column.getColumnValue(), StringUtils.trimToNull(StringUtils.substring(line, curStart, curStart + column.getColumnLength())));
+            curStart += column.getColumnLength();
+        }
+
+        return rowData;
+    }
+
+    private Map<String, String> readDelimitedColumns(String line, List<Column> columnNames) {
         HashMap<String, String> rowData = new HashMap<String, String>(columnNames.size());
 
         String[] columns = StringUtils.splitByWholeSeparatorPreserveAllTokens(line + " ", "|");
@@ -50,7 +83,7 @@ public class FlatFileReader {
 
         for(int i =0;i<columns.length ;i++) {
             String columnData = StringUtils.trimToNull(columns[i]);
-            String columnName = columnNames.get(i);
+            String columnName = columnNames.get(i).getColumnValue();
 
             if (null == columnData || "\\N".equals(columnData)) {
                 continue;
