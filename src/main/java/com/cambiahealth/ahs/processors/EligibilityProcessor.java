@@ -78,7 +78,7 @@ public class EligibilityProcessor {
                                 String plan = claimConfig.get(cspiLine.get(CspiHistory.CSPI_ITS_PREFIX.toString()));
 
                                 if(null == plan || plan.isEmpty()) {
-                                    // TODO Log the failed ITS_PREFIX.  It is probably something that should be fixed.
+                                    System.out.println("Warning: A NDW plan code was not found for the ITS_PREFIX: '" + cspiLine.get(CspiHistory.CSPI_ITS_PREFIX.toString()) + "'. MEME_CK='" + meme + "'. This row will be skipped.");
                                     continue acors;
                                 }
 

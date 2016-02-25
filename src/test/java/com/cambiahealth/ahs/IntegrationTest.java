@@ -33,7 +33,7 @@ public class IntegrationTest {
     IFlatFileResolver resolver = factory.getInstance(descriptors);
 
     @Test
-    public void testIntegration() throws IOException, ParseException {
+    public void testIntegration() throws IOException, ParseException, InterruptedException {
         Main.create2A(resolver);
 
         ByteArrayOutputStream bos = ((ResourceFlatFileResolver) resolver).getBos();

@@ -23,7 +23,7 @@ public class Main {
     private static int rejectedAfterTimelineReview = 0;
     private static int rejectedQuickly = 0;
 
-    public static void main(String[] args) throws IOException, ParseException {
+    public static void main(String[] args) throws IOException, ParseException, InterruptedException {
         String basePath;
         if(args.length < 1) {
             throw new RuntimeException("Must pass base path as first argument");
@@ -55,7 +55,7 @@ public class Main {
         System.out.println("Total outputted rows: " + totalOutputtedRows);
     }
 
-    public static void create2A(IFlatFileResolver resolver) throws IOException, ParseException {
+    public static void create2A(IFlatFileResolver resolver) throws IOException, ParseException, InterruptedException {
         initializeProcessors(resolver);
 
         beginProcessing(resolver);
@@ -91,12 +91,13 @@ public class Main {
         EligibilityProcessor.shutdown();
     }
 
-    private static void beginProcessing(IFlatFileResolver resolver) throws IOException, ParseException {
+    private static void beginProcessing(IFlatFileResolver resolver) throws IOException, ParseException, InterruptedException {
         FlatFileReader reader = resolver.getFile(FileDescriptor.ACORS_ELIGIBILITY_EXTRACT);
         BufferedWriter writer = resolver.writeFile(FileDescriptor.FINAL_2A_OUTPUT);
 
         String memeCk = null;
         Map<String, String> currentLine = null;
+        int i = 1;
 
         // Walk through AcorsEligibility
         while(null != (currentLine = reader.readColumn())) {
@@ -122,6 +123,13 @@ public class Main {
             } else {
                 rejectedMeme++;
                 rejectedQuickly++;
+            }
+
+            // Sleep for a millisecond every 10 rows
+            // TODO: Adjust this after tuning on the servers
+            // Perhaps make it a parameter
+            if(i++ % 10 == 0) {
+                Thread.sleep(1);
             }
         }
     }
@@ -150,7 +158,7 @@ public class Main {
 
     /**
      * Walks through all the time vectors and produces changes that occurred in the last 2 years
-     * Previous versions walked all 735 days by force, this version takes advantage of vectors
+     * Previous versions walked all 735 days by brute force, this version takes advantage of vectors
      * to jump ahead where possible.
      */
     static Timeline outputRowsTo2A(BufferedWriter writer, Map<TimelineContext, Timeline> timelines) throws IOException {
@@ -231,6 +239,13 @@ public class Main {
             if(shouldStartNewRow) {
                 // If we are the first day, I want to get the earliest date from the vectors
                 rowStartDate = firstDay ? highestStart : new LocalDate(curDay);
+
+                // Ensure we indicate that we are now in a valid row of data
+                hasRowToOutput = true;
+            }
+
+            // Get the most recent data for this row.
+            if(isValid) {
                 // Combine timeline data
                 combinedData.putAll(primData);
                 combinedData.putAll(nameData);
@@ -241,9 +256,6 @@ public class Main {
                 if(null != cobData) {
                     combinedData.putAll(cobData);
                 }
-
-                // Ensure we indicate that we are now in a valid row of data
-                hasRowToOutput = true;
             }
 
             firstDay = false;
@@ -283,7 +295,7 @@ public class Main {
      * hash code of the data you send it.  Use this to determine if row data has "changed" enough
      * to trigger a new row.
      *
-     * Code stolen from the ArrayList hashCode() method.
+     * Code stolen from the ArrayList::hashCode() method.
      *
      */
     private static int getTriggeredHashCode(Map<String, String> eligData, Map<String, String> nameData, Map<String, String> cobData, Map<String, String> primData, Map<String, String> secdData) {
@@ -292,9 +304,9 @@ public class Main {
         hashCode = 31 * hashCode + ObjectUtils.hashCode(eligData.get(AcorsEligibility.RELATIONSHIP_TO_SUBSCRIBER.toString()));
         hashCode = 31 * hashCode + ObjectUtils.hashCode(eligData.get(CspiHistory.CSPI_ITS_PREFIX.toString()));
         hashCode = 31 * hashCode + ObjectUtils.hashCode(eligData.get(CspiHistory.SBSB_ID.toString()));
+        hashCode = 31 * hashCode + ObjectUtils.hashCode(eligData.get(AcorsEligibility.ATTRIBUTION_PARN_IND.toString()));
         hashCode = 31 * hashCode + ObjectUtils.hashCode(nameData.get(MemberHistory.MEME_FIRST_NAME.toString()));
         hashCode = 31 * hashCode + ObjectUtils.hashCode(nameData.get(MemberHistory.MEME_LAST_NAME.toString()));
-        hashCode = 31 * hashCode + ObjectUtils.hashCode(eligData.get(AcorsEligibility.ATTRIBUTION_PARN_IND.toString()));
 
         if(null != cobData) {
             hashCode = 31 * hashCode + ObjectUtils.hashCode(cobData.get(Cob.COB_VALUE.toString()));
