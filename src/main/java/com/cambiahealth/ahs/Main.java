@@ -229,7 +229,7 @@ public class Main {
                 // Output row
                 totalOutputtedRows++;
                 output.storeVector(rowStartDate, curDay.minusDays(1), combinedData);
-                Map<String, Column> row = TransformProcessor.processTransformationForFile(rowStartDate, curDay.minusDays(1), combinedData);
+                Map<NdwMember,String> row = TransformProcessor.processTransformationForFile(rowStartDate, curDay.minusDays(1), combinedData);
                 FlatFileWriter.writeLine(row, writer);
 
                 // Reset loop
@@ -268,7 +268,7 @@ public class Main {
             // Output the last row using the largest end date of the current vectors
             output.storeVector(rowStartDate, lowestEnd, combinedData);
             totalOutputtedRows++;
-            Map<String, Column> row = TransformProcessor.processTransformationForFile(rowStartDate, lowestEnd, combinedData);
+            Map<NdwMember, String> row = TransformProcessor.processTransformationForFile(rowStartDate, lowestEnd, combinedData);
             FlatFileWriter.writeLine(row, writer);
         }
 
@@ -329,7 +329,6 @@ public class Main {
             hashCode = 31 * hashCode + ObjectUtils.hashCode(secdData.get("secd_" + SubscriberAddress.SBAD_STATE.toString()));
             hashCode = 31 * hashCode + ObjectUtils.hashCode(secdData.get("secd_" + SubscriberAddress.SBAD_ZIP.toString()));
         }
-
 
         return hashCode;
     }

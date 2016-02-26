@@ -21,8 +21,8 @@ public enum FileDescriptor {
     SUBSCRIBER_ADDRESS_EXTRACT(asList(enumNameToColumnArray(SubscriberAddress.values()))),
     CONFIDENTIAL_EMAIL_PHONE_EXTRACT(asList(enumNameToColumnArray(ConfidentialEmailPhone.values()))),
     CSPI_EXTRACT(asList(enumNameToColumnArray(CspiHistory.values()))),
-    FINAL_2A_OUTPUT(asList(enumFixedWidthToColumnArray(NdwMember.values())), true),
-    BCBSA_MBR_PFX_SFX_XREF(asList(enumNameToColumnArray(BcbsaMbrPfxSfxXref.values())));
+    BCBSA_MBR_PFX_SFX_XREF(asList(enumNameToColumnArray(BcbsaMbrPfxSfxXref.values()))),
+    FINAL_2A_OUTPUT(asList(enumFixedWidthToColumnArray(NdwMember.values())), true);
 
     private List<Column> schema;
     private boolean isFixed;

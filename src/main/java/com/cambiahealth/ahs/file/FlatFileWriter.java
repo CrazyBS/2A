@@ -1,6 +1,8 @@
 package com.cambiahealth.ahs.file;
 
 import com.cambiahealth.ahs.entity.Column;
+import com.cambiahealth.ahs.entity.FixedWidth;
+import com.cambiahealth.ahs.entity.NdwMember;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -12,7 +14,7 @@ import java.util.Map;
  */
 public class FlatFileWriter {
 
-    public static void writeLine(Map<String,Column> data, BufferedWriter writer) throws IOException {
+    public static void writeLine(Map<? extends FixedWidth,String> data, BufferedWriter writer) throws IOException {
         String line = generateLine(data);
 
         writer.write(line);
@@ -20,10 +22,11 @@ public class FlatFileWriter {
         writer.flush();
     }
 
-    public static String generateLine(Map<String,Column> data){
+    public static String generateLine(Map<? extends FixedWidth,String> data){
         String line = "";
-        for(Column column : data.values()){
-            String columnValue = String.format("%1$-" +  column.getColumnLength() + "s", null != column.getColumnValue() ? column.getColumnValue() : "");
+        for(FixedWidth dataKey : data.keySet()){
+            String dataValue = data.get(dataKey);
+            String columnValue = String.format("%1$-" +  dataKey.getFixedWidth() + "s", null != dataValue ? dataValue : "");
             line += columnValue;
         }
         return line;
