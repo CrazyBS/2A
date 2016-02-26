@@ -42,7 +42,8 @@ public class EligibilityProcessor {
     }
 
     public static Timeline processEligibiltiy(String meme, Map<TimelineContext, Timeline> timelines) throws IOException, ParseException {
-        Timeline timeline = new Timeline();
+        Timeline acorTimeline = new Timeline();
+        Timeline cspiTimeline = new Timeline();
 
         // We'll use buffers to make the logic easier to manage
         // It could be done by traversing, but we should be okay.
@@ -66,12 +67,12 @@ public class EligibilityProcessor {
 
                         if(key.equals(cspiKey)) {
                             // We match, let's look for date match
-                            DateTime acorStart = new DateTime(format.parse(acorsLine.get(AcorsEligibility.MEME_EFFECTIVE_DATE.toString())));
-                            DateTime acorEnd = new DateTime(format.parse(acorsLine.get(AcorsEligibility.MEME_TERMINATION_DATE.toString())));
-                            DateTime cspiStart = new DateTime(format.parse(cspiLine.get(CspiHistory.CSPI_EFF_DT.toString())));
-                            DateTime cspiEnd = new DateTime(format.parse(cspiLine.get(CspiHistory.CSPI_TERM_DT.toString())));
+                            LocalDate acorStart = new LocalDate(format.parse(acorsLine.get(AcorsEligibility.MEME_EFFECTIVE_DATE.toString())));
+                            LocalDate acorEnd = new LocalDate(format.parse(acorsLine.get(AcorsEligibility.MEME_TERMINATION_DATE.toString())));
+                            LocalDate cspiStart = new LocalDate(format.parse(cspiLine.get(CspiHistory.CSPI_EFF_DT.toString())));
+                            LocalDate cspiEnd = new LocalDate(format.parse(cspiLine.get(CspiHistory.CSPI_TERM_DT.toString())));
 
-                            if(new Interval(cspiStart, cspiEnd).contains(acorStart)) {
+                            if(cspiStart.isBefore(acorEnd) && acorStart.isBefore(cspiEnd)) {
                                 // We have a complete match!
                                 // Collect the rest of the data
                                 collectLines(confEmailPhoneReader, meme, ConfidentialEmailPhone.MEME_CK.toString(), confEmailPhoneList);
@@ -82,27 +83,26 @@ public class EligibilityProcessor {
                                     continue acors;
                                 }
 
-                                acorsLine.put(CspiHistory.CSPI_ITS_PREFIX.toString(), cspiLine.get(CspiHistory.CSPI_ITS_PREFIX.toString()));
-                                acorsLine.put(CspiHistory.SBSB_ID.toString(), cspiLine.get(CspiHistory.SBSB_ID.toString()));
-                                acorsLine.put(ClaimsConfig.PLAN.toString(), plan);
+                                cspiLine.put(ClaimsConfig.PLAN.toString(), plan);
+                                cspiTimeline.storeVector(cspiStart, cspiEnd, cspiLine);
 
                                 if(!confEmailPhoneList.isEmpty()) {
                                     acorsLine.put(ConfidentialEmailPhone.ENEM_EMAIL.toString(), confEmailPhoneList.get(0).get(ConfidentialEmailPhone.ENEM_EMAIL.toString()));
                                     acorsLine.put(ConfidentialEmailPhone.ENPH_PHONE.toString(), confEmailPhoneList.get(0).get(ConfidentialEmailPhone.ENPH_PHONE.toString()));
-                                    timeline.addConsistentData(ConsistentFields.IS_PHI.toString(), "PHI");
+                                    acorTimeline.addConsistentData(ConsistentFields.IS_PHI.toString(), "PHI");
                                 }
 
                                 if(StringUtils.equalsIgnoreCase(acorsLine.get(AcorsEligibility.MASK_IND.toString()), "Y")) {
-                                    timeline.addConsistentData(ConsistentFields.IS_BLU.toString(), "BLU");
+                                    acorTimeline.addConsistentData(ConsistentFields.IS_BLU.toString(), "BLU");
                                 }
 
                                 // These should be updated with the most recent line of data we have since we are sorted ASC to effective date
-                                timeline.addConsistentData(ConsistentFields.DOB.toString(), acorsLine.get(AcorsEligibility.DOB.toString()));
-                                timeline.addConsistentData(ConsistentFields.GENDER.toString(), acorsLine.get(AcorsEligibility.GENDER.toString()));
-                                timeline.addConsistentData(ConsistentFields.CTG_ID.toString(), acorsLine.get(AcorsEligibility.CTG_ID.toString()));
+                                acorTimeline.addConsistentData(ConsistentFields.DOB.toString(), acorsLine.get(AcorsEligibility.DOB.toString()));
+                                acorTimeline.addConsistentData(ConsistentFields.GENDER.toString(), acorsLine.get(AcorsEligibility.GENDER.toString()));
+                                acorTimeline.addConsistentData(ConsistentFields.CTG_ID.toString(), acorsLine.get(AcorsEligibility.CTG_ID.toString()));
 
-                                timeline.storeVector(new LocalDate(acorStart), new LocalDate(acorEnd), acorsLine);
-                                continue acors;
+                                acorTimeline.storeVector(acorStart, acorEnd, acorsLine);
+                                //continue acors;
                             }
                         }
                     }
@@ -111,8 +111,9 @@ public class EligibilityProcessor {
         }
 
         // If this returns an empty timeline, we can cancel the rest of the processing on this row
-        timelines.put(TimelineContext.ELIGIBILITY, timeline);
-        return timeline;
+        timelines.put(TimelineContext.ACORS_ELIGIBILITY, acorTimeline);
+        timelines.put(TimelineContext.CSPI_ELIGIBILITY, cspiTimeline);
+        return acorTimeline;
     }
 
     public static void shutdown() throws IOException {

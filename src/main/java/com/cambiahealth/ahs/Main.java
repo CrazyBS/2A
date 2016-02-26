@@ -129,22 +129,22 @@ public class Main {
             // Sleep for a millisecond every 10 rows
             // TODO: Adjust this after tuning on the servers
             // Perhaps make it a parameter
-            if(i++ % 10 == 0) {
-                Thread.sleep(1);
-            }
+//            if(i++ % 10 == 0) {
+//                Thread.sleep(1);
+//            }
         }
     }
 
     private static boolean processMeme(String meme, Map<TimelineContext, Timeline>  timelines) throws IOException, ParseException {
         // Address process()
         Timeline address = AddressProcessor.processAddress(meme, timelines);
-        if(address.isEmpty() && address.isEmptyData()) {
+        if(address.isEmpty() || address.isEmptyData()) {
             return false;
         }
 
         // Eligibility process()
         Timeline elig = EligibilityProcessor.processEligibiltiy(meme, timelines);
-        if(elig.isEmpty() && elig.isEmptyData()) {
+        if(elig.isEmpty() || elig.isEmptyData()) {
             return false;
         }
 
@@ -167,7 +167,8 @@ public class Main {
         Timeline name = timelines.get(TimelineContext.NAME);
         Timeline primaryAddress = timelines.get(TimelineContext.ADDRESS_PRIMARY);
         Timeline secondaryAddress = timelines.get(TimelineContext.ADDRESS_SECONDARY);
-        Timeline eligibility = timelines.get(TimelineContext.ELIGIBILITY);
+        Timeline acorEligibility = timelines.get(TimelineContext.ACORS_ELIGIBILITY);
+        Timeline cspiEligibility = timelines.get(TimelineContext.CSPI_ELIGIBILITY);
         Timeline output = new Timeline();
 
         LocalDate start = new LocalDate().minusMonths(1).withDayOfMonth(1).minusYears(2);
@@ -189,32 +190,34 @@ public class Main {
             TimeVector primVector = primaryAddress.getVector(curDay);
             TimeVector secdVector = secondaryAddress.getVector(curDay);
             TimeVector nameVector = name.getVector(curDay);
-            TimeVector eligVector = eligibility.getVector(curDay);
+            TimeVector acorEligVector = acorEligibility.getVector(curDay);
+            TimeVector cspiEligVector = cspiEligibility.getVector(curDay);
             TimeVector cobVector  = cob.getVector(curDay);
 
             // We need to determine what our earliest vector date is, so we can set the start date to it
             if(firstDay) {
-                highestStart = getHighest(primVector.getStart(), secdVector.getStart(), nameVector.getStart(), eligVector.getStart(), cobVector.getStart());
+                highestStart = getHighest(primVector.getStart(), secdVector.getStart(), nameVector.getStart(), acorEligVector.getStart(), cspiEligVector.getStart(), cobVector.getStart());
             }
 
             // This date represents the earliest we can jump to the next vector
-            lowestEnd = getLowest(primVector.getEnd(), secdVector.getEnd(), nameVector.getEnd(), eligVector.getEnd(), cobVector.getEnd());
+            lowestEnd = getLowest(primVector.getEnd(), secdVector.getEnd(), nameVector.getEnd(), acorEligVector.getEnd(), cspiEligVector.getEnd(), cobVector.getEnd());
 
             // Retrieve our actual map data
             Map<String, String> primData = primVector.getStoredObject();
             Map<String, String> secdData = secdVector.getStoredObject();
             Map<String, String> nameData = nameVector.getStoredObject();
-            Map<String, String> eligData = eligVector.getStoredObject();
+            Map<String, String> acorEligData = acorEligVector.getStoredObject();
+            Map<String, String> cspiEligData = cspiEligVector.getStoredObject();
             Map<String, String> cobData  = cobVector.getStoredObject();
 
             // Determine if this date is a valid row
-            boolean isValid = (null != primData) && (null != nameData) && (null != eligData);
+            boolean isValid = (null != primData) && (null != nameData) && (null != acorEligData) && (null != cspiEligData);
 
             // We will use isSame to determine if data has changed from one vector to another
             boolean isSame;
             if(isValid) {
                 // Determine if we have the same set of data from the last row
-                int hashCode = getTriggeredHashCode(eligData, nameData, cobData, primData, secdData);
+                int hashCode = getTriggeredHashCode(acorEligData, cspiEligData, nameData, cobData, primData, secdData);
                 isSame = prevHashCode == hashCode;
                 prevHashCode = hashCode;
             } else {
@@ -250,7 +253,8 @@ public class Main {
                 // Combine timeline data
                 combinedData.putAll(primData);
                 combinedData.putAll(nameData);
-                combinedData.putAll(eligData);
+                combinedData.putAll(acorEligData);
+                combinedData.putAll(cspiEligData);
                 if(null != secdData) {
                     combinedData.putAll(secdData);
                 }
@@ -299,13 +303,13 @@ public class Main {
      * Code stolen from the ArrayList::hashCode() method.
      *
      */
-    private static int getTriggeredHashCode(Map<String, String> eligData, Map<String, String> nameData, Map<String, String> cobData, Map<String, String> primData, Map<String, String> secdData) {
+    private static int getTriggeredHashCode(Map<String, String> acorEligData, Map<String, String> cspiEligData, Map<String, String> nameData, Map<String, String> cobData, Map<String, String> primData, Map<String, String> secdData) {
         int hashCode = 1;
 
-        hashCode = 31 * hashCode + ObjectUtils.hashCode(eligData.get(AcorsEligibility.RELATIONSHIP_TO_SUBSCRIBER.toString()));
-        hashCode = 31 * hashCode + ObjectUtils.hashCode(eligData.get(CspiHistory.CSPI_ITS_PREFIX.toString()));
-        hashCode = 31 * hashCode + ObjectUtils.hashCode(eligData.get(CspiHistory.SBSB_ID.toString()));
-        hashCode = 31 * hashCode + ObjectUtils.hashCode(eligData.get(AcorsEligibility.ATTRIBUTION_PARN_IND.toString()));
+        hashCode = 31 * hashCode + ObjectUtils.hashCode(acorEligData.get(AcorsEligibility.RELATIONSHIP_TO_SUBSCRIBER.toString()));
+        hashCode = 31 * hashCode + ObjectUtils.hashCode(cspiEligData.get(CspiHistory.CSPI_ITS_PREFIX.toString()));
+        hashCode = 31 * hashCode + ObjectUtils.hashCode(cspiEligData.get(CspiHistory.SBSB_ID.toString()));
+        hashCode = 31 * hashCode + ObjectUtils.hashCode(acorEligData.get(AcorsEligibility.ATTRIBUTION_PARN_IND.toString()));
         hashCode = 31 * hashCode + ObjectUtils.hashCode(nameData.get(MemberHistory.MEME_FIRST_NAME.toString()));
         hashCode = 31 * hashCode + ObjectUtils.hashCode(nameData.get(MemberHistory.MEME_LAST_NAME.toString()));
 
