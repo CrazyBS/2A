@@ -22,6 +22,7 @@ public class Main {
     private static int totalOutputtedRows = 0;
     private static int rejectedAfterTimelineReview = 0;
     private static int rejectedQuickly = 0;
+    public static Set<String> reportedItsPrefix = new HashSet<String>();
 
     public static void main(String[] args) throws IOException, ParseException, InterruptedException {
         String basePath;
@@ -113,8 +114,8 @@ public class Main {
             // Start the next row
             memeCk = lineMemeCk;
 
+            totalMeme++;
             if(processMeme(lineMemeCk, timelines)) {
-                totalMeme++;
                 Timeline output = outputRowsTo2A(writer, timelines);
                 if(output.isEmpty()) {
                     rejectedMeme++;
@@ -137,13 +138,13 @@ public class Main {
     private static boolean processMeme(String meme, Map<TimelineContext, Timeline>  timelines) throws IOException, ParseException {
         // Address process()
         Timeline address = AddressProcessor.processAddress(meme, timelines);
-        if(address.isEmpty()) {
+        if(address.isEmpty() && address.isEmptyData()) {
             return false;
         }
 
         // Eligibility process()
         Timeline elig = EligibilityProcessor.processEligibiltiy(meme, timelines);
-        if(elig.isEmpty()) {
+        if(elig.isEmpty() && elig.isEmptyData()) {
             return false;
         }
 

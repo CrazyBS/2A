@@ -112,7 +112,9 @@ public class AddressProcessor {
                 } else if(line.get(SubscriberAddress.SBAD_TYPE.toString()).equals("M")){
                     // Always add the mailing timeline for the secondary addresses, but only if it is a valid state.  There is lots of garbage out there
                     if (isValidState(state)) {
-                        mailTimeline.storeVector(startDate, endDate, line);
+                        if(isValidOutOfArea(state, zip)) {
+                            mailTimeline.storeVector(startDate, endDate, line);
+                        }
 
                         Map<String, String> addressForSecondary = new HashMap<String, String>(line.size());
                         for(String key : line.keySet()) {
@@ -138,7 +140,6 @@ public class AddressProcessor {
         // A subscriber address H can only go into the Primary, if there is no confidential
         // A mailing address goes into the secondary, unless there is no primary, then it become primary
 
-        // Possible plan for primary
         // Paint all mailing addresses onto the primary line
         primaryTimeline.addAll(mailTimeline);
 
@@ -190,7 +191,7 @@ public class AddressProcessor {
     }
 
     private static boolean isValidOutOfArea(String state, String zip) {
-        return null != state && null != zip && (stringIn(state, outOfAreaStates) || "WA".equals(state) && zipCodes.contains(StringUtils.substring(zip, 0, 6)));
+        return null != state && null != zip && (stringIn(state, outOfAreaStates) || "WA".equals(state) && zipCodes.contains(StringUtils.substring(zip, 0, 5)));
     }
 
     private static boolean isValidState(String state) {

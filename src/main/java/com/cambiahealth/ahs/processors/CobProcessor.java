@@ -42,7 +42,6 @@ public class CobProcessor {
             // Get line
             String lineMeme = line.get(Cob.MEME_CK.toString());
 
-            // Did we pass it?
             if (null == lineMeme) {
                 throw new IOException("Invalid columns");
             }

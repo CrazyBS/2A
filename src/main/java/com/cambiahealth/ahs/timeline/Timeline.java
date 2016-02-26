@@ -17,6 +17,15 @@ public class Timeline {
         return timeline.isEmpty();
     }
 
+    public boolean isEmptyData() {
+        for(TimeVector vector: timeline) {
+            if(null != vector.getStoredObject()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public int storeVector(LocalDate start, LocalDate end, Map<String,String> data) {
         return storeVector(start, end, data, null);
     }
