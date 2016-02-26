@@ -9,6 +9,9 @@ import com.cambiahealth.ahs.timeline.Timeline;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -22,6 +25,7 @@ import org.joda.time.LocalDate;
 public class NameProcessor {
     private static FlatFileReader reader;
     private static Map<String, Map<String, String>> fixes;
+    private static DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 
     public static void initialize(IFlatFileResolver resolver) throws IOException {
         reader = resolver.getFile(FileDescriptor.MEMBER_HISTORY_EXTRACT);
@@ -44,56 +48,49 @@ public class NameProcessor {
         }
     }
 
-    public static void processName(String MEME, Map<TimelineContext, Timeline>  timelines) throws IOException {
+    public static void processName(String memeCk, Map<TimelineContext, Timeline>  timelines) throws IOException, ParseException {
         Timeline timeline = new Timeline();
-        Map<String, String> storedLine = new HashMap<String, String>();
-        LocalDate storedStart = new LocalDate();
-        LocalDate storedEnd = new LocalDate();
+        Map<String, String> storedLine;
 
         while(true) {
-            Map<String, String> line;
-            line = reader.readColumn();
-            if(null != line) {
+            Map<String, String> line = reader.readColumn();
+
+            // Are we out of lines?
+            if (null == line) {
+                break;
+            }
+
+            // Get line
+            String lineMeme = line.get(MemberHistory.MEME_CK.toString());
+
+            if (null == lineMeme) {
+                throw new IOException("Invalid columns");
+            }
+
+            int rowTest = lineMeme.compareTo(memeCk);
+
+            if (rowTest == 0) {
+                // We have a match!
+                LocalDate start = new LocalDate(format.parse(line.get(MemberHistory.MEME_EFF_DT.toString())));
+                LocalDate end = new LocalDate(format.parse(line.get(MemberHistory.MEME_TERM_DT.toString())));
+                storedLine = new HashMap<String, String>(line);
+
+                // Check for a title that we can process
                 String key = line.get(MemberHistory.MEME_TITLE.toString());
                 if(null != key) {
                     Map<String, String> values = fixes.get(key);
                     if(null != values) {
-                        line.putAll(values);
+                        storedLine.putAll(values);
                     }
                 }
-            }
-            if(line != null){
-                if (!StringUtils.equals(line.get(MemberHistory.MEME_CK.toString()), MEME)) {
-                    if (!storedLine.isEmpty()){
-                        reader.unRead();
-                        timeline.storeVector(storedStart, storedEnd, storedLine);
-                        break;
-                    } else if(line.get(MemberHistory.MEME_CK.toString()).compareTo(MEME) > 0){
-                        break;
-                    }
-                } else {
-                    if(storedLine.isEmpty()) {
-                        storedLine = new HashMap<String,String>(line);
-                        storedStart = new LocalDate(line.get(MemberHistory.MEME_EFF_DT.toString()));
-                        storedEnd = new LocalDate(line.get(MemberHistory.MEME_TERM_DT.toString()));
-                    } else if(!StringUtils.equals(line.get(MemberHistory.MEME_FIRST_NAME.toString()),storedLine.get(MemberHistory.MEME_FIRST_NAME.toString())) ||
-                              !StringUtils.equals(line.get(MemberHistory.MEME_LAST_NAME.toString()),storedLine.get(MemberHistory.MEME_LAST_NAME.toString()))   ||
-                              !StringUtils.equals(line.get(MemberHistory.MEME_REL.toString()),storedLine.get(MemberHistory.MEME_REL.toString()))){
-                        timeline.storeVector(storedStart, storedEnd, storedLine);
-                        storedLine = new HashMap<String,String>(line);
-                        storedStart = new LocalDate(line.get(MemberHistory.MEME_EFF_DT.toString()));
-                        storedEnd = new LocalDate(line.get(MemberHistory.MEME_TERM_DT.toString()));
-                    } else{
-                        storedLine = new HashMap<String,String>(line);
-                        storedEnd = new LocalDate(line.get(MemberHistory.MEME_TERM_DT.toString()));
-                    }
-                }
-            } else {
-                if(!storedLine.isEmpty()){
-                    timeline.storeVector(storedStart, storedEnd, storedLine);
-                }
+
+                timeline.storeVector(start, end, storedLine);
+            } else if (rowTest > 0){
+                // We passed it!
+                reader.unRead();
                 break;
             }
+            // Keep looping if we haven't hit, or passed it yet
         }
 
         timelines.put(TimelineContext.NAME,timeline);

@@ -13,6 +13,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,7 +41,7 @@ public class NameProcessorTest {
     }
 
     @Test
-    public void testProcessName() throws IOException {
+    public void testProcessName() throws IOException, ParseException {
         Map<TimelineContext, Timeline> timelines = new HashMap<TimelineContext, Timeline>();
 
         NameProcessor.processName("100671253", timelines);
@@ -80,7 +81,7 @@ public class NameProcessorTest {
     }
 
     @Test
-    public void testProcessRel() throws IOException {
+    public void testProcessRel() throws IOException, ParseException {
         Map<TimelineContext, Timeline> timelines = new HashMap<TimelineContext, Timeline>();
         NameProcessor.processName("104747002", timelines);
 
@@ -117,7 +118,7 @@ public class NameProcessorTest {
     }
 
     @Test
-    public void testPrefixSufficLookup() throws IOException {
+    public void testPrefixSufficLookup() throws IOException, ParseException {
         Map<TimelineContext, Timeline> timelines = new HashMap<TimelineContext, Timeline>();
         NameProcessor.processName("100196303", timelines);
 
@@ -130,7 +131,7 @@ public class NameProcessorTest {
     }
 
     @Test
-    public void testRowPreservation() throws IOException {
+    public void testRowPreservation() throws IOException, ParseException {
         Map<TimelineContext, Timeline> timelines = new HashMap<TimelineContext, Timeline>();
 /*
         104731206|2015-01-01|2199-12-31||BAR|FOO|F|D
