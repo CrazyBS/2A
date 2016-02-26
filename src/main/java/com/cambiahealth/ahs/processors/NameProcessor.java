@@ -19,9 +19,6 @@ import com.cambiahealth.ahs.timeline.TimelineContext;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.LocalDate;
 
-/**
- * Created by msnook on 2/18/2016.
- */
 public class NameProcessor {
     private static FlatFileReader reader;
     private static Map<String, Map<String, String>> fixes;
