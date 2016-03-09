@@ -72,8 +72,13 @@ public class NameProcessor {
                 LocalDate end = new LocalDate(format.parse(line.get(MemberHistory.MEME_TERM_DT.toString())));
                 storedLine = new HashMap<String, String>(line);
 
+                // Deal with last names that have a
+                storedLine.put(MemberHistory.MEME_LAST_NAME.toString(), StringUtils.substringBefore(line.get(MemberHistory.MEME_LAST_NAME.toString()),","));
+                String endOfName = StringUtils.trimToNull(StringUtils.substringAfterLast(line.get(MemberHistory.MEME_LAST_NAME.toString()),","));
+                String memberTitle = line.get(MemberHistory.MEME_TITLE.toString());
+
                 // Check for a title that we can process
-                String key = line.get(MemberHistory.MEME_TITLE.toString());
+                String key = memberTitle == null ? endOfName : memberTitle;
                 if(null != key) {
                     Map<String, String> values = fixes.get(key);
                     if(null != values) {

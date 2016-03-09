@@ -1,11 +1,13 @@
 package com.cambiahealth.ahs.processors;
 
 import com.cambiahealth.ahs.entity.BcbsaMbrPfxSfxXref;
+import com.cambiahealth.ahs.entity.MemberHistory;
 import com.cambiahealth.ahs.file.FileDescriptor;
 import com.cambiahealth.ahs.file.FlatFileResolverFactory;
 import com.cambiahealth.ahs.file.IFlatFileResolver;
 import com.cambiahealth.ahs.timeline.Timeline;
 import com.cambiahealth.ahs.timeline.TimelineContext;
+import org.apache.commons.lang3.StringUtils;
 import org.joda.time.LocalDate;
 import org.junit.After;
 import org.junit.Assert;
@@ -13,9 +15,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.lang.reflect.Member;
 import java.text.ParseException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.jar.Attributes;
 
 /**
  * Created by msnook on 2/18/2016.
@@ -152,6 +156,33 @@ public class NameProcessorTest {
         NameProcessor.processName("104791403", timelines);
         Assert.assertNotNull(timelines.get(TimelineContext.NAME));
         Assert.assertFalse(timelines.get(TimelineContext.NAME).isEmpty());
+
+    }
+
+    @Test
+    public void testTitleLogic() throws IOException, ParseException {
+        Map<TimelineContext, Timeline> timelines = new HashMap<TimelineContext, Timeline>();
+
+        NameProcessor.processName("100671252", timelines);
+
+        Assert.assertNotNull(timelines.get(TimelineContext.NAME));
+        Assert.assertFalse(timelines.get(TimelineContext.NAME).isEmpty());
+
+        Assert.assertTrue(StringUtils.equals(timelines.get(TimelineContext.NAME).get(new LocalDate(2016,1,1)).get(BcbsaMbrPfxSfxXref.BCBSA_MBR_SFX.toString()), "JR"));
+        Assert.assertTrue(StringUtils.equals(timelines.get(TimelineContext.NAME).get(new LocalDate(2016,1,1)).get(MemberHistory.MEME_LAST_NAME.toString()), "BAR"));
+    }
+
+    @Test
+    public void testTitleFallbackLogic() throws IOException, ParseException {
+        Map<TimelineContext, Timeline> timelines = new HashMap<TimelineContext, Timeline>();
+
+        NameProcessor.processName("101640752", timelines);
+
+        Assert.assertNotNull(timelines.get(TimelineContext.NAME));
+        Assert.assertFalse(timelines.get(TimelineContext.NAME).isEmpty());
+
+        Assert.assertTrue(StringUtils.equals(timelines.get(TimelineContext.NAME).get(new LocalDate(2016,1,1)).get(BcbsaMbrPfxSfxXref.BCBSA_MBR_SFX.toString()), "JR"));
+        Assert.assertTrue(StringUtils.equals(timelines.get(TimelineContext.NAME).get(new LocalDate(2016,1,1)).get(MemberHistory.MEME_LAST_NAME.toString()), "BAR"));
 
     }
 }
