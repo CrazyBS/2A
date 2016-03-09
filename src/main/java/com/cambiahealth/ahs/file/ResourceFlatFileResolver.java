@@ -1,6 +1,7 @@
 package com.cambiahealth.ahs.file;
 
 import java.io.*;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -8,7 +9,7 @@ import java.util.Map;
  */
 public class ResourceFlatFileResolver implements IFlatFileResolver {
     private Map<FileDescriptor, String> descriptors;
-    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+    private Map<FileDescriptor, ByteArrayOutputStream> bos = new HashMap<FileDescriptor, ByteArrayOutputStream>();
 
     public ResourceFlatFileResolver(Map<FileDescriptor, String> descriptors) {
         this.descriptors = descriptors;
@@ -19,14 +20,17 @@ public class ResourceFlatFileResolver implements IFlatFileResolver {
     }
 
     public BufferedWriter writeFile(FileDescriptor descriptor) throws IOException {
-        return new BufferedWriter(new OutputStreamWriter(bos));
+        if(!bos.containsKey(descriptor)) {
+            bos.put(descriptor, new ByteArrayOutputStream());
+        }
+        return new BufferedWriter(new OutputStreamWriter(bos.get(descriptor)));
     }
 
     public Map<FileDescriptor, String> getDescriptors() {
         return descriptors;
     }
 
-    public ByteArrayOutputStream getBos() {
-        return bos;
+    public ByteArrayOutputStream getBos(FileDescriptor descriptor) {
+        return bos.get(descriptor);
     }
 }

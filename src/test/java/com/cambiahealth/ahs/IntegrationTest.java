@@ -28,6 +28,7 @@ public class IntegrationTest {
             descriptors.put(FileDescriptor.ZIP_CODE_EXTRACT, "OOA_Zipcode_Extract.dat");
             descriptors.put(FileDescriptor.BCBSA_MBR_PFX_SFX_XREF, "OOA_Title_Extract.dat");
             descriptors.put(FileDescriptor.FINAL_2A_OUTPUT, "expected_ndw_member");
+            descriptors.put(FileDescriptor.FINAL_2A_CONTROL, "expected_ndw_filesubmission_control");
     }
     FlatFileResolverFactory factory = new FlatFileResolverFactory(true);
     IFlatFileResolver resolver = factory.getInstance(descriptors);
@@ -36,8 +37,8 @@ public class IntegrationTest {
     public void testIntegration() throws IOException, ParseException, InterruptedException {
         Main.create2A(resolver);
 
-        ByteArrayOutputStream bos = ((ResourceFlatFileResolver) resolver).getBos();
-        byte[] data = bos.toByteArray();
+        ByteArrayOutputStream bos2A = ((ResourceFlatFileResolver) resolver).getBos(FileDescriptor.FINAL_2A_OUTPUT);
+        byte[] data = bos2A.toByteArray();
         BufferedReader output = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(data)));
         FlatFileReader actual = new FlatFileReader(output, FileDescriptor.FINAL_2A_OUTPUT);
         FlatFileReader expected = resolver.getFile(FileDescriptor.FINAL_2A_OUTPUT);

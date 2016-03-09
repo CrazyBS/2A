@@ -23,6 +23,7 @@ public class Main {
     private static int rejectedAfterTimelineReview = 0;
     private static int rejectedQuickly = 0;
     public static Set<String> reportedItsPrefix = new HashSet<String>();
+    public static int prefexRejectCount = 0;
 
     public static void main(String[] args) throws IOException, ParseException, InterruptedException {
         String basePath;
@@ -44,14 +45,18 @@ public class Main {
         descriptors.put(FileDescriptor.ZIP_CODE_EXTRACT, basePath + "OOA_Zipcode_Extract.dat");
         descriptors.put(FileDescriptor.BCBSA_MBR_PFX_SFX_XREF, basePath + "OOA_Title_Extract.dat");
         descriptors.put(FileDescriptor.FINAL_2A_OUTPUT, basePath + "ndw_member");
+        descriptors.put(FileDescriptor.FINAL_2A_CONTROL, basePath + "ndw_filesubmission_control");
 
         FlatFileResolverFactory factory = new FlatFileResolverFactory(false);
         IFlatFileResolver resolver = factory.getInstance(descriptors);
 
         create2A(resolver);
 
+        createControl(resolver);
+
         System.out.println("Total MEME_CK's processed: " + totalMeme);
-        System.out.println("Total MEME_CK's rejected: " + rejectedMeme + " (quickly: " + rejectedQuickly + ")(after review: " + rejectedAfterTimelineReview + ")");
+        System.out.println("Total MEME_CK's rejected: " + rejectedMeme + " (quickly: " + rejectedQuickly + ")(after review: " + rejectedAfterTimelineReview + ")(no prefix: " + prefexRejectCount + ")");
+        System.out.println("The set of prefixes that were not found: " + StringUtils.join(reportedItsPrefix, ", "));
         System.out.println("Total MEME_CK's outputted: " + (totalMeme - rejectedMeme));
         System.out.println("Total outputted rows: " + totalOutputtedRows);
     }
@@ -63,6 +68,21 @@ public class Main {
 
         shutdownProcessors();
     }
+
+    public static void createControl(IFlatFileResolver resolver) throws IOException {
+        Map<FixedWidth, String> data = new LinkedHashMap<FixedWidth, String>(5);
+        LocalDate curDay = new LocalDate();
+        LocalDate cycleId = new LocalDate().minusMonths(1).withDayOfMonth(1);
+
+        data.put(NdwFileSubmissionControl.PLAN, "611");
+        data.put(NdwFileSubmissionControl.CONTEXT, "NDW_MEMBER");
+        data.put(NdwFileSubmissionControl.CYCLE_ID, cycleId.toString("yyyyMMdd"));
+        data.put(NdwFileSubmissionControl.CUR_DATE, curDay.toString("yyyyMMdd"));
+        data.put(NdwFileSubmissionControl.ROW_COUNT, StringUtils.leftPad(Integer.toString(totalOutputtedRows), NdwFileSubmissionControl.ROW_COUNT.getFixedWidth(),"0"));
+
+        FlatFileWriter.writeLine(data, resolver.writeFile(FileDescriptor.FINAL_2A_CONTROL));
+    }
+
 
     private static void initializeProcessors(IFlatFileResolver resolver) throws IOException {
         // COB init()

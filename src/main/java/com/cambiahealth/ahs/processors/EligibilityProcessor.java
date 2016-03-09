@@ -1,5 +1,6 @@
 package com.cambiahealth.ahs.processors;
 
+import com.cambiahealth.ahs.Main;
 import com.cambiahealth.ahs.entity.*;
 import com.cambiahealth.ahs.file.FileDescriptor;
 import com.cambiahealth.ahs.file.FlatFileReader;
@@ -76,10 +77,12 @@ public class EligibilityProcessor {
                                 // We have a complete match!
                                 // Collect the rest of the data
                                 collectLines(confEmailPhoneReader, meme, ConfidentialEmailPhone.MEME_CK.toString(), confEmailPhoneList);
-                                String plan = claimConfig.get(cspiLine.get(CspiHistory.CSPI_ITS_PREFIX.toString()));
+                                String prefix = cspiLine.get(CspiHistory.CSPI_ITS_PREFIX.toString());
+                                String plan = claimConfig.get(prefix);
 
                                 if(null == plan || plan.isEmpty()) {
-                                    System.out.println("Warning: A NDW plan code was not found for the ITS_PREFIX: '" + cspiLine.get(CspiHistory.CSPI_ITS_PREFIX.toString()) + "'. MEME_CK='" + meme + "'. This row will be skipped.");
+                                    Main.reportedItsPrefix.add(prefix);
+                                    Main.prefexRejectCount++;
                                     continue acors;
                                 }
 

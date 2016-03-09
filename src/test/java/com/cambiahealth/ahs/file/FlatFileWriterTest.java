@@ -59,7 +59,7 @@ public class FlatFileWriterTest {
 
         FlatFileWriter.writeLine(data,writer);
 
-        ByteArrayOutputStream bos = ((ResourceFlatFileResolver) resolver).getBos();
+        ByteArrayOutputStream bos = ((ResourceFlatFileResolver) resolver).getBos(FileDescriptor.FINAL_2A_OUTPUT);
         byte[] byteArray = bos.toByteArray();
         //Test line length, content
 

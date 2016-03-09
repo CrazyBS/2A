@@ -163,26 +163,29 @@ public class NameProcessorTest {
     public void testTitleLogic() throws IOException, ParseException {
         Map<TimelineContext, Timeline> timelines = new HashMap<TimelineContext, Timeline>();
 
+        /* 100671252|2015-01-01|2199-12-31||BAR, JR|FOO|F|D */
+
         NameProcessor.processName("100671252", timelines);
 
         Assert.assertNotNull(timelines.get(TimelineContext.NAME));
         Assert.assertFalse(timelines.get(TimelineContext.NAME).isEmpty());
 
-        Assert.assertTrue(StringUtils.equals(timelines.get(TimelineContext.NAME).get(new LocalDate(2016,1,1)).get(BcbsaMbrPfxSfxXref.BCBSA_MBR_SFX.toString()), "JR"));
-        Assert.assertTrue(StringUtils.equals(timelines.get(TimelineContext.NAME).get(new LocalDate(2016,1,1)).get(MemberHistory.MEME_LAST_NAME.toString()), "BAR"));
+        Assert.assertEquals("JR", timelines.get(TimelineContext.NAME).get(new LocalDate(2016,1,1)).get(BcbsaMbrPfxSfxXref.BCBSA_MBR_SFX.toString()));
+        Assert.assertEquals("BAR", timelines.get(TimelineContext.NAME).get(new LocalDate(2016,1,1)).get(MemberHistory.MEME_LAST_NAME.toString()));
     }
 
     @Test
     public void testTitleFallbackLogic() throws IOException, ParseException {
         Map<TimelineContext, Timeline> timelines = new HashMap<TimelineContext, Timeline>();
 
+        /* 101640752|2015-01-01|2199-12-31|JR|BAR, DR|FOO|F|D */
+
         NameProcessor.processName("101640752", timelines);
 
         Assert.assertNotNull(timelines.get(TimelineContext.NAME));
         Assert.assertFalse(timelines.get(TimelineContext.NAME).isEmpty());
 
-        Assert.assertTrue(StringUtils.equals(timelines.get(TimelineContext.NAME).get(new LocalDate(2016,1,1)).get(BcbsaMbrPfxSfxXref.BCBSA_MBR_SFX.toString()), "JR"));
-        Assert.assertTrue(StringUtils.equals(timelines.get(TimelineContext.NAME).get(new LocalDate(2016,1,1)).get(MemberHistory.MEME_LAST_NAME.toString()), "BAR"));
-
+        Assert.assertEquals("JR", timelines.get(TimelineContext.NAME).get(new LocalDate(2016,1,1)).get(BcbsaMbrPfxSfxXref.BCBSA_MBR_SFX.toString()));
+        Assert.assertEquals("BAR", timelines.get(TimelineContext.NAME).get(new LocalDate(2016,1,1)).get(MemberHistory.MEME_LAST_NAME.toString()));
     }
 }
